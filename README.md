@@ -1,3 +1,1 @@
 # yolov7-face
-
-Coming Soon...
