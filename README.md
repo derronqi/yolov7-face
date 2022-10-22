@@ -4,9 +4,10 @@ Fix yolov7-pose keypoints out of the box
 
 
 
-
-
-
+| Method           | Easy  | Medium | Hard  | Link  |
+| -----------------| ----- | ------ | ----- | ----- |
+| yolov7-tiny-leak | 93.0  | 90.9   | 82.4  | -     |
+| yolov7           | -     | -      | -     | -     |
 
 
 
