@@ -1,3 +1,15 @@
+# parameters
+nc: 1  # number of classes
+nkpt: 5 # number of keypoints
+depth_multiple: 1.0  # model depth multiple
+width_multiple: 1.0  # layer channel multiple
+dw_conv_kpt: True
+
+anchors:
+  - [4,5,  6,8,  10,12]  # P3/8
+  - [15,19,  23,30,  39,52]  # P4/16
+  - [72,97,  123,164,  209,297]  # P5/32
+
 # yolov7 backbone
 backbone:
   # [from, number, module, args]
@@ -121,9 +133,9 @@ head:
    [[-1, -2, -3, -4, -5, -6], 1, Concat, [1]],
    [-1, 1, Conv, [512, 1, 1]], # 101
    
-   [75, 1, RepConv, [256, 3, 1]],
-   [88, 1, RepConv, [512, 3, 1]],
-   [101, 1, RepConv, [1024, 3, 1]],
+   [75, 1, Conv, [256, 3, 1]],
+   [88, 1, Conv, [512, 3, 1]],
+   [101, 1, Conv, [1024, 3, 1]],
 
-   [[102,103,104], 1, Detect, [nc, anchors]],   # Detect(P3, P4, P5)
+   [[102,103,104], 1, IKeypoint, [nc, anchors, nkpt]],   # Detect(P3, P4, P5)
   ]
