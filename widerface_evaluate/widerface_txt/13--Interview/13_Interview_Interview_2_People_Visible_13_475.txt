@@ -1,0 +1,4 @@
+13_Interview_Interview_2_People_Visible_13_475
+2
+322 190 217 336 0.885
+635 209 140 205 0.829

@@ -1,0 +1,4 @@
+52_Photographers_photographertakingphoto_52_303
+2
+434 219 71 98 0.846
+241 248 80 103 0.011

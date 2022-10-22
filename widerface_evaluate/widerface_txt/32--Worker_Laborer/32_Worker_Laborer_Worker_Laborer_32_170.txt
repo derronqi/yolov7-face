@@ -1,0 +1,3 @@
+32_Worker_Laborer_Worker_Laborer_32_170
+1
+503 590 103 95 0.826

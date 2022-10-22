@@ -1,0 +1,3 @@
+24_Soldier_Firing_Soldier_Firing_24_129
+1
+347 330 98 131 0.784

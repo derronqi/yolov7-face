@@ -1,0 +1,4 @@
+52_Photographers_photographertakingphoto_52_743
+2
+685 152 127 191 0.866
+0 133 255 445 0.013

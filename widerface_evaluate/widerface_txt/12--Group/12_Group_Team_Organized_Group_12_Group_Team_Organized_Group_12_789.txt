@@ -1,0 +1,6 @@
+12_Group_Team_Organized_Group_12_Group_Team_Organized_Group_12_789
+4
+298 164 52 67 0.874
+676 458 47 59 0.856
+521 602 51 67 0.850
+749 624 34 47 0.035

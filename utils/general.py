@@ -490,14 +490,14 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
          list of detections, on (n,6) tensor per image [xyxy, conf, cls]
     """
     if nc is None:
-        nc = prediction.shape[2] - 5  if not kpt_label else prediction.shape[2] - 56 # number of classes
+        nc = prediction.shape[2] - 5  if not kpt_label else prediction.shape[2] - 20 # number of classes
     xc = prediction[..., 4] > conf_thres  # candidates
 
     # Settings
     min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
-    max_det = 300  # maximum number of detections per image
+    #max_det = 300  # maximum number of detections per image
     max_nms = 30000  # maximum number of boxes into torchvision.ops.nms()
-    time_limit = 10.0  # seconds to quit after
+    time_limit = 1000.0  # seconds to quit after
     redundant = True  # require redundant detections
     multi_label &= nc > 1  # multiple labels per box (adds 0.5ms/img)
     merge = False  # use merge-NMS
@@ -561,8 +561,8 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
         c = x[:, 5:6] * (0 if agnostic else max_wh)  # classes
         boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
         i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
-        if i.shape[0] > max_det:  # limit detections
-            i = i[:max_det]
+        #if i.shape[0] > max_det:  # limit detections
+        #    i = i[:max_det]
         if merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
             # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
             iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix

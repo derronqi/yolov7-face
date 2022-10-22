@@ -1,0 +1,5 @@
+12_Group_Team_Organized_Group_12_Group_Team_Organized_Group_12_244
+3
+395 55 138 165 0.861
+614 105 126 207 0.858
+145 101 131 145 0.849

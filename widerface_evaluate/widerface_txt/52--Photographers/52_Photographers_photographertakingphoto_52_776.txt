@@ -1,0 +1,5 @@
+52_Photographers_photographertakingphoto_52_776
+3
+353 189 505 589 0.792
+717 981 192 279 0.335
+630 1000 278 377 0.016

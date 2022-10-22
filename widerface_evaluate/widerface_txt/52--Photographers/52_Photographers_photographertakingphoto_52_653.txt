@@ -1,0 +1,5 @@
+52_Photographers_photographertakingphoto_52_653
+3
+518 223 251 280 0.116
+480 145 284 275 0.028
+436 167 237 356 0.011

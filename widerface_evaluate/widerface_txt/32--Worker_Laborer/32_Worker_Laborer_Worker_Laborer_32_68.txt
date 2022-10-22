@@ -1,0 +1,3 @@
+32_Worker_Laborer_Worker_Laborer_32_68
+1
+385 313 379 424 0.823

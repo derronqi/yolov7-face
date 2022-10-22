@@ -1,0 +1,4 @@
+8_Election_Campain_Election_Campaign_8_173
+2
+238 38 202 287 0.879
+723 151 188 243 0.847

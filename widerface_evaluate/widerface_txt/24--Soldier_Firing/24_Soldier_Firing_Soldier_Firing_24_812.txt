@@ -1,0 +1,4 @@
+24_Soldier_Firing_Soldier_Firing_24_812
+2
+772 66 75 87 0.024
+379 181 45 35 0.011

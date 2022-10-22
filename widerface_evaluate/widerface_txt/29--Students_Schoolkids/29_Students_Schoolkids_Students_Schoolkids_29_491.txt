@@ -1,0 +1,5 @@
+29_Students_Schoolkids_Students_Schoolkids_29_491
+3
+611 230 27 32 0.860
+496 211 27 33 0.841
+419 235 24 32 0.823

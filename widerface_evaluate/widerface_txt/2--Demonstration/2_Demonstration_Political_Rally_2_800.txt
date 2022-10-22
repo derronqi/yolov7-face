@@ -1,0 +1,4 @@
+2_Demonstration_Political_Rally_2_800
+2
+355 193 155 216 0.890
+936 187 87 247 0.013

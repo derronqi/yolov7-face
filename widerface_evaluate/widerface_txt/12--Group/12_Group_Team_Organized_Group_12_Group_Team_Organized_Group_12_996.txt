@@ -1,0 +1,5 @@
+12_Group_Team_Organized_Group_12_Group_Team_Organized_Group_12_996
+3
+365 342 302 462 0.893
+605 675 305 413 0.872
+56 554 52 78 0.169

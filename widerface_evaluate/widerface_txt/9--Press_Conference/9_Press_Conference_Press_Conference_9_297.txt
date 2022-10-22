@@ -1,0 +1,4 @@
+9_Press_Conference_Press_Conference_9_297
+2
+406 165 263 372 0.896
+580 898 83 108 0.035

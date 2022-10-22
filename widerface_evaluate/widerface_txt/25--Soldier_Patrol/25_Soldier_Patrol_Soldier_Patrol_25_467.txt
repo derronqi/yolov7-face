@@ -1,0 +1,4 @@
+25_Soldier_Patrol_Soldier_Patrol_25_467
+2
+764 53 40 58 0.775
+0 31 140 372 0.015

@@ -1,0 +1,3 @@
+2_Demonstration_Political_Rally_2_172
+1
+427 306 320 459 0.848

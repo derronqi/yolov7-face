@@ -1,0 +1,4 @@
+26_Soldier_Drilling_Soldiers_Drilling_26_336
+2
+637 208 40 49 0.826
+85 228 39 45 0.818

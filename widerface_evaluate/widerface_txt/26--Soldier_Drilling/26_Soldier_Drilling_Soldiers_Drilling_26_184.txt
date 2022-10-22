@@ -1,0 +1,4 @@
+26_Soldier_Drilling_Soldiers_Drilling_26_184
+2
+417 307 89 128 0.847
+393 584 64 103 0.014

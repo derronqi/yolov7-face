@@ -1,0 +1,4 @@
+8_Election_Campain_Election_Campaign_8_620
+2
+648 138 197 278 0.896
+221 114 204 296 0.888

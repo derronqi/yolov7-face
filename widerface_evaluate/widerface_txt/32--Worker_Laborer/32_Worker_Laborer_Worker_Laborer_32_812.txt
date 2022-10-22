@@ -1,0 +1,4 @@
+32_Worker_Laborer_Worker_Laborer_32_812
+2
+387 85 95 120 0.853
+0 350 17 55 0.022

@@ -1,0 +1,4 @@
+2_Demonstration_Political_Rally_2_896
+2
+296 283 86 111 0.857
+698 46 84 115 0.823

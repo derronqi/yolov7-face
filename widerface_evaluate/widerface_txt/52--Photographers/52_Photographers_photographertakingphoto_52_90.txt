@@ -1,0 +1,4 @@
+52_Photographers_photographertakingphoto_52_90
+2
+261 203 152 178 0.346
+214 208 197 313 0.043

@@ -1,0 +1,6 @@
+12_Group_Team_Organized_Group_12_Group_Team_Organized_Group_12_364
+4
+845 120 39 50 0.878
+610 151 38 46 0.860
+307 127 40 53 0.859
+157 116 35 47 0.830

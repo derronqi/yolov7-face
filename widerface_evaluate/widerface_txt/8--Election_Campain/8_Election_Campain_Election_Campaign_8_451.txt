@@ -1,0 +1,4 @@
+8_Election_Campain_Election_Campaign_8_451
+2
+429 132 240 300 0.872
+934 581 90 174 0.010

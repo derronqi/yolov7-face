@@ -1,0 +1,4 @@
+8_Election_Campain_Election_Campaign_8_529
+2
+291 148 159 234 0.871
+868 635 65 32 0.012

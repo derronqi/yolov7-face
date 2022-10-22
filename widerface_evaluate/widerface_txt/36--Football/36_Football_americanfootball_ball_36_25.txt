@@ -1,0 +1,4 @@
+36_Football_americanfootball_ball_36_25
+2
+572 81 70 92 0.818
+358 125 56 86 0.797

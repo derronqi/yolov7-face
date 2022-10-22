@@ -1,0 +1,5 @@
+52_Photographers_photographertakingphoto_52_316
+3
+121 123 99 133 0.799
+790 121 119 158 0.784
+451 225 186 261 0.543

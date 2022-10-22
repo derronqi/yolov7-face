@@ -1,0 +1,3 @@
+32_Worker_Laborer_Worker_Laborer_32_512
+1
+424 82 110 138 0.834
