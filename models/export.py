@@ -71,8 +71,8 @@ if __name__ == '__main__':
         y = model(img)  # dry runs
     output_names = None
     if opt.export_nms:
-        nms = models.common.NMS(conf=0.01, kpt_label=True)
-        nms_export = models.common.NMS_Export(conf=0.01, kpt_label=True)
+        nms = models.common.NMS(conf=0.01, kpt_label=4)
+        nms_export = models.common.NMS_Export(conf=0.01, kpt_label=4)
         y_export = nms_export(y)
         y = nms(y)
         #assert (torch.sum(torch.abs(y_export[0]-y[0]))<1e-6)
