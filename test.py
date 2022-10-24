@@ -384,7 +384,7 @@ if __name__ == '__main__':
     parser.add_argument('--project', default='runs/test', help='save to project/name')
     parser.add_argument('--name', default='exp', help='save to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
-    parser.add_argument('--kpt-label', action='store_true', help='Whether kpt-label is enabled or not')
+    parser.add_argument('--kpt-label', type=int, default=5, help='number of keypoints')
     parser.add_argument('--flip-test', action='store_true', help='Whether to run flip_test or not')
     opt = parser.parse_args()
     opt.save_json |= opt.data.endswith('coco.yaml')
