@@ -361,7 +361,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.stride = stride
         self.path = path
         self.kpt_label = kpt_label
-        self.flip_index = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
+        self.flip_index = [1, 0, 2, 4, 3]
 
         try:
             f = []  # image files
@@ -617,7 +617,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                         labels[:, 6::2]= (1-labels[:, 6::2])*(labels[:, 6::2]!=0)
 
             # flip left-right
-            if 0:#random.random() < hyp['fliplr']:
+            if random.random() < hyp['fliplr']:
                 img = np.fliplr(img)
                 if nL:
                     labels[:, 1] = 1 - labels[:, 1]
