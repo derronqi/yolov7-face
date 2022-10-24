@@ -1,8 +1,5 @@
 # yolov7-face
 
-Fix yolov7-pose keypoints out of the box
-
-
 
 | Method           | Easy  | Medium | Hard  | Link  |
 | -----------------| ----- | ------ | ----- | ----- |
@@ -10,6 +7,9 @@ Fix yolov7-pose keypoints out of the box
 | yolov7           | -     | -      | -     | -     |
 
 
+#### Test
+
+![](data/images/result.jpg)
 
 
 #### References
