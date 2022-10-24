@@ -490,7 +490,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
          list of detections, on (n,6) tensor per image [xyxy, conf, cls]
     """
     if nc is None:
-        nc = prediction.shape[2] - 5  if not kpt_label else prediction.shape[2] - 20 # number of classes
+        nc = prediction.shape[2] - 5  if not kpt_label else prediction.shape[2] - 5 - nkpt * 3 # number of classes
     xc = prediction[..., 4] > conf_thres  # candidates
 
     # Settings
@@ -580,18 +580,18 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 
 
 def non_max_suppression_export(prediction, conf_thres=0.25, iou_thres=0.45, classes=None, agnostic=False, multi_label=False,
-                        kpt_label=True, nc=None, labels=()):
+                        kpt_label=5, nc=None, labels=()):
     """Runs Non-Maximum Suppression (NMS) on inference results
 
     Returns:
          list of detections, on (n,6) tensor per image [xyxy, conf, cls]
     """
     if nc is None:
-        nc = prediction.shape[2] - 5  if not kpt_label else prediction.shape[2] - 56 # number of classes
+        nc = prediction.shape[2] - 5  if not kpt_label else prediction.shape[2] - 5 - kpt_label * 3 # number of classes
 
     min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
     xc = prediction[..., 4] > conf_thres  # candidates
-    output = [torch.zeros((0, 57), device=prediction.device)] * prediction.shape[0]
+    output = [torch.zeros((0, kpt_label*3+6), device=prediction.device)] * prediction.shape[0]
     for xi, x in enumerate(prediction):  # image index, image inference
         x = x[xc[xi]]  # confidence
         # Compute conf
