@@ -493,16 +493,16 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     if len(l):
                         assert (l >= 0).all(), 'negative labels'
                         if kpt_label:
-                            assert l.shape[1] == self.kpt_label * 3 + 5, 'labels require 56 columns each'
+                            assert l.shape[1] == kpt_label*3 + 5, 'labels require {} columns each'.format(kpt_label*3+5)
                             assert (l[:, 5::3] <= 1).all(), 'non-normalized or out of bounds coordinate labels'
                             assert (l[:, 6::3] <= 1).all(), 'non-normalized or out of bounds coordinate labels'
                             # print("l shape", l.shape)
-                            kpts = np.zeros((l.shape[0], self.kpt_label * 3))
+                            kpts = np.zeros((l.shape[0], kpt_label*2+5))
                             for i in range(len(l)):
                                 kpt = np.delete(l[i,5:], np.arange(2, l.shape[1]-5, 3))  #remove the occlusion paramater from the GT
                                 kpts[i] = np.hstack((l[i, :5], kpt))
                             l = kpts
-                            assert l.shape[1] == self.kpt_label * 3, 'labels require 39 columns each after removing occlusion paramater'
+                            assert l.shape[1] == kpt_label*2+5, 'labels require {} columns each after removing occlusion paramater'.format(kpt_label*2+5)
                         else:
                             assert l.shape[1] == 5, 'labels require 5 columns each'
                             assert (l[:, 1:5] <= 1).all(), 'non-normalized or out of bounds coordinate labels'
@@ -510,11 +510,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                         assert np.unique(l, axis=0).shape[0] == l.shape[0], 'duplicate labels'
                     else:
                         ne += 1  # label empty
-                        l = np.zeros((0, self.kpt_label * 3), dtype=np.float32) if kpt_label else np.zeros((0, 5), dtype=np.float32)
+                        l = np.zeros((0, kpt_label*2+5), dtype=np.float32) if kpt_label else np.zeros((0, 5), dtype=np.float32)
 
                 else:
                     nm += 1  # label missing
-                    l = np.zeros((0, self.kpt_label * 3), dtype=np.float32) if kpt_label else np.zeros((0, 5), dtype=np.float32)
+                    l = np.zeros((0,kpt_label*2+5), dtype=np.float32) if kpt_label else np.zeros((0, 5), dtype=np.float32)
 
                 x[im_file] = [l, shape, segments]
             except Exception as e:

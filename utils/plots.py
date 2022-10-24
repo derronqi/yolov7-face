@@ -193,7 +193,7 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
             image_targets = targets[targets[:, 0] == i]
             boxes = xywh2xyxy(image_targets[:, 2:6]).T
             classes = image_targets[:, 1].astype('int')
-            labels = image_targets.shape[1] == 40 if kpt_label else image_targets.shape[1] == 6   # labels if no conf column
+            labels = image_targets.shape[1] == kpt_label*2+6 if kpt_label else image_targets.shape[1] == 6   # labels if no conf column
             conf = None if labels else image_targets[:, 6]  # check for confidence presence (label vs pred)
             if kpt_label:
                 if conf is None:
