@@ -123,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--line-thickness', default=3, type=int, help='bounding box thickness (pixels)')
     parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
     parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
-    parser.add_argument('--kpt-label', type=bool, default=True, help='use keypoint labels')
+    parser.add_argument('--kpt-label', type=int, default=5, help='number of keypoints')
     parser.add_argument('--save_folder', default='./widerface_evaluate/widerface_txt/', type=str, help='Dir to save txt results')
     parser.add_argument('--dataset_folder', default='data/widerface/widerface/val/images/', type=str, help='dataset path')
     opt = parser.parse_args()
