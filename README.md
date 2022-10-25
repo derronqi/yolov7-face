@@ -12,9 +12,9 @@
 ![](data/images/result.jpg)
 
 
-#### Android demo
+#### Demo
 
-https://github.com/FeiGeChuanShu/ncnn_Android_face
+* [ncnn_Android_face](https://github.com/FeiGeChuanShu/ncnn_Android_face)
 
 #### References
 
