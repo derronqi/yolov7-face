@@ -1,10 +1,10 @@
 # yolov7-face
 
 
-| Method           | Easy  | Medium | Hard  | Link  |
-| -----------------| ----- | ------ | ----- | ----- |
-| yolov7-tiny-leak | 93.2  | 91.3   | 83.0  | [google](https://drive.google.com/file/d/1B2F5YuERfMEfJeRXfz5oMxI8wcZLmvFJ/view?usp=sharing) |
-| yolov7           | -     | -      | -     | -     |
+| Method           |  Test Size | Easy  | Medium | Hard  | Link  |
+| -----------------| ---------- | ----- | ------ | ----- | ----- |
+| yolov7-tiny-leak | 640        | 93.2  | 91.3   | 83.0  | [google](https://drive.google.com/file/d/1B2F5YuERfMEfJeRXfz5oMxI8wcZLmvFJ/view?usp=sharing) |
+| yolov5s          | 640        | 94.0  | 92.1   | 84.5  | ----- |
 
 
 #### Test
