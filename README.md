@@ -1,11 +1,11 @@
 # yolov7-face
 
 
-| Method           |  Test Size | Easy  | Medium | Hard  | FLOPs@640 (B) | Link  |
-| -----------------| ---------- | ----- | ------ | ----- | ------------- | ----- |
-| yolov7-tiny-leak | 640        | 93.2  | 91.3   | 83.0  |  16.6         | [google](https://drive.google.com/file/d/1B2F5YuERfMEfJeRXfz5oMxI8wcZLmvFJ/view?usp=sharing) |
-| yolov5s          | 640        | 94.0  | 92.1   | 84.5  |  15.4         | [google](https://drive.google.com/file/d/1V7BMMTRk89YzoPHTw6qW3KSOwU_rlBGq/view?usp=sharing) |
-| yolov7-lite-e    | 640        | 91.8  | 88.6   | 71.8  |  2.6          | [google](https://drive.google.com/file/d/1hvjQ43lrhYWslCiiNoKDmkso98tgdG7P/view?usp=sharing) |
+| Method           |  Test Size | Easy  | Medium | Hard  | FLOPs (B) | Link  |
+| -----------------| ---------- | ----- | ------ | ----- | --------- | ----- |
+| yolov7-tiny-leak | 640        | 93.2  | 91.3   | 83.0  |  16.6     | [google](https://drive.google.com/file/d/1B2F5YuERfMEfJeRXfz5oMxI8wcZLmvFJ/view?usp=sharing) |
+| yolov5s          | 640        | 94.0  | 92.1   | 84.5  |  15.4     | [google](https://drive.google.com/file/d/1V7BMMTRk89YzoPHTw6qW3KSOwU_rlBGq/view?usp=sharing) |
+| yolov7-lite-e    | 640        | 91.8  | 88.6   | 71.8  |  2.6      | [google](https://drive.google.com/file/d/1hvjQ43lrhYWslCiiNoKDmkso98tgdG7P/view?usp=sharing) |
 
 
 #### Dataset
