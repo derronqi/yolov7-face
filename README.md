@@ -5,7 +5,7 @@
 | -----------------| ---------- | ----- | ------ | ----- | ----- |
 | yolov7-tiny-leak | 640        | 93.2  | 91.3   | 83.0  | [google](https://drive.google.com/file/d/1B2F5YuERfMEfJeRXfz5oMxI8wcZLmvFJ/view?usp=sharing) |
 | yolov5s          | 640        | 94.0  | 92.1   | 84.5  | [google](https://drive.google.com/file/d/1V7BMMTRk89YzoPHTw6qW3KSOwU_rlBGq/view?usp=sharing) |
-| yolov7-lite-e    | 640        | 91.1  | 87.5   | 70.9  | [google](https://drive.google.com/file/d/192NLp3tu3nF7lHq62twH6Vgl_ixGfjrY/view?usp=sharing) |
+| yolov7-lite-e    | 640        | 91.8  | 88.6   | 71.8  | [google](https://drive.google.com/file/d/1B2F5YuERfMEfJeRXfz5oMxI8wcZLmvFJ/view?usp=sharing) |
 
 
 #### Dataset
