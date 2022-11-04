@@ -1,5 +1,10 @@
 # yolov7-face
 
+### New feature
+
+* Dynamic keypoints
+* WingLoss
+* Efficient backbones
 
 | Method           |  Test Size | Easy  | Medium | Hard  | FLOPs (B) @640 | Link  |
 | -----------------| ---------- | ----- | ------ | ----- | -------------- | ----- |
