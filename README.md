@@ -6,6 +6,8 @@
 * WingLoss
 * Efficient backbones
 
+
+
 | Method           |  Test Size | Easy  | Medium | Hard  | FLOPs (B) @640 | Link  |
 | -----------------| ---------- | ----- | ------ | ----- | -------------- | ----- |
 | yolov7-tiny-leak | 640        | 93.2  | 91.3   | 83.0  |  16.6          | [google](https://drive.google.com/file/d/1B2F5YuERfMEfJeRXfz5oMxI8wcZLmvFJ/view?usp=sharing) |
