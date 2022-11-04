@@ -386,7 +386,7 @@ def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None, kpt_label=False
         coords[:, [1, 3]] -= pad[1]  # y padding
         coords[:, [0, 2]] /= gain
         coords[:, [1, 3]] /= gain
-        clip_coords(coords[0:4], img0_shape)
+        clip_coords(coords[:, 0:4], img0_shape)
         #coords[:, 0:4] = coords[:, 0:4].round()
     else:
         coords[:, 0::step] -= pad[0]  # x padding
