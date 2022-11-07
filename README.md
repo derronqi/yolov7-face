@@ -33,7 +33,7 @@
 
 * [ncnn_Android_face](https://github.com/FeiGeChuanShu/ncnn_Android_face)
 
-* (yolov7-detect-face-onnxrun-cpp-py)(https://github.com/hpc203/yolov7-detect-face-onnxrun-cpp-py)
+* [yolov7-detect-face-onnxrun-cpp-py](https://github.com/hpc203/yolov7-detect-face-onnxrun-cpp-py)
 
 #### References
 
