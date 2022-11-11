@@ -5,6 +5,7 @@
 * Dynamic keypoints
 * WingLoss
 * Efficient backbones
+* EIOU and SIOU
 
 
 
