@@ -12,7 +12,7 @@
 | Method           |  Test Size | Easy  | Medium | Hard  | FLOPs (B) @640 | Link  |
 | -----------------| ---------- | ----- | ------ | ----- | -------------- | ----- |
 | yolov7-lite-t    | 640        | 87.1  | 83.9   | 69.0  |  0.8           | -     |
-| yolov7-lite-s    | 640        | 92.1  | 89.3   | 77.4  |  3.0           | -     |
+| yolov7-lite-s    | 640        | 92.4  | 90.0   | 77.5  |  3.0           | -     |
 | yolov7-tiny-leak | 640        | 93.2  | 91.3   | 83.0  |  16.6          | [google](https://drive.google.com/file/d/1B2F5YuERfMEfJeRXfz5oMxI8wcZLmvFJ/view?usp=sharing) |
 | yolov7s          | 640        | 94.8  | 93.1   | 85.2  |  16.8          | [google](https://drive.google.com/file/d/1_ZjnNF_JKHVlq41EgEqMoGE2TtQ3SYmZ/view?usp=sharing) |
 | yolov7-w6        | 960        | 96.4  | 95.0   | 88.3  |  89.0          | [google](https://drive.google.com/file/d/1U_kH7Xa_9-2RK2hnyvsyMLKdYB0h4MJS/view?usp=sharing) |
