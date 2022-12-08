@@ -254,6 +254,16 @@ class IKeypoint(nn.Module):
         # x = x.copy()  # for profiling
         z = []  # inference output
         self.training |= self.export
+        if self.export:
+            for i in range(self.nl):
+                if self.nkpt is None or self.nkpt==0:
+                    x[i] = self.im[i](self.m[i](self.ia[i](x[i])))  # conv
+                else :
+                    x[i] = torch.cat((self.im[i](self.m[i](self.ia[i](x[i]))), self.m_kpt[i](x[i])), axis=1)
+                #bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
+                #x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+            return x
+
         for i in range(self.nl):
             if self.nkpt is None or self.nkpt==0:
                 x[i] = self.im[i](self.m[i](self.ia[i](x[i])))  # conv
@@ -480,7 +490,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
 
         n = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, DWConv, MixConv2d, Focus, ConvFocus, CrossConv, BottleneckCSP,
-                 C3, C3TR, BottleneckCSPF, BottleneckCSP2, SPPCSP, SPPCSPC, SPPF, conv_bn_relu_maxpool, Shuffle_Block, DWConvblock]:
+                 C3, C3TR, BottleneckCSPF, BottleneckCSP2, SPPCSP, SPPCSPC, SPPF, conv_bn_relu_maxpool, Shuffle_Block, DWConvblock, StemBlock]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, 8)
@@ -537,7 +547,7 @@ if __name__ == '__main__':
     # Create model
     model = Model(opt.cfg).to(device)
     model.train()
-
+    print(model)
     # Profile
     # img = torch.rand(8 if torch.cuda.is_available() else 1, 3, 320, 320).to(device)
     # y = model(img, profile=True)
