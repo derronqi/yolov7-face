@@ -53,9 +53,9 @@ backbone:
 head:
   [[-1, 1, Conv, [256, 1, 1, None, 1, nn.LeakyReLU(0.1)]],
    [-2, 1, Conv, [256, 1, 1, None, 1, nn.LeakyReLU(0.1)]],
-   [-1, 1, SP, [5]],
-   [-2, 1, SP, [9]],
-   [-3, 1, SP, [13]],
+   [-1, 1, SPF, [5]],
+   [-2, 1, SPF, [9]],
+   [-3, 1, SPF, [13]],
    [[-1, -2, -3, -4], 1, Concat, [1]],
    [-1, 1, Conv, [256, 1, 1, None, 1, nn.LeakyReLU(0.1)]],
    [[-1, -7], 1, Concat, [1]],

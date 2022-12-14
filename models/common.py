@@ -42,6 +42,15 @@ class SP(nn.Module):
     def forward(self, x):
         return self.m(x)
 
+class SPF(nn.Module):
+    def __init__(self, k=3, s=1):
+        super(SPF, self).__init__()
+        self.n = (k - 1) // 2
+        self.m = nn.Sequential(*[nn.MaxPool2d(kernel_size=3, stride=s, padding=1) for _ in range(self.n)])
+
+    def forward(self, x):
+        return self.m(x)
+
 
 class ImplicitA(nn.Module):
     def __init__(self, channel):
