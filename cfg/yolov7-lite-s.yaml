@@ -20,7 +20,7 @@ backbone:
     [ -1, 7, Shuffle_Block, [192, 1]], # 4
     [ -1, 1, Shuffle_Block, [384, 2]], # 5-P5/32
     [ -1, 3, Shuffle_Block, [384, 1]], # 6
-    [ -1, 1, SPPF, [384, 3]],
+    [ -1, 1, SPPF, [384, 5]],
   ]
 
 # v5lite-e head
@@ -43,5 +43,5 @@ head:
     [[ -1, 8], 1, ADD, [1]],  # cat head P5
     [ -1, 1, DWConvblock, [96, 3, 1]],  # 21 (P5/32-large)
 
-    [[ 14, 17, 20], 1, IKeypoint, [nc, anchors, nkpt]],  # Detect(P3, P4, P5)
+    [[ 15, 18, 21], 1, IKeypoint, [nc, anchors, nkpt]],  # Detect(P3, P4, P5)
   ]
