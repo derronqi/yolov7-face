@@ -3,6 +3,7 @@
 import math
 from copy import copy
 from pathlib import Path
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -417,6 +418,10 @@ class Concat(nn.Module):
 
     def forward(self, x):
         return torch.cat(x, self.d)
+    
+    def forward_jit(self, x: List[torch.Tensor]):
+        return torch.cat(x, dim=self.d)
+        
 
 # yolov7-lite
 class StemBlock(nn.Module):
