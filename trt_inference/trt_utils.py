@@ -4,6 +4,8 @@ import pycuda.driver as cuda
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import torch
+import torchvision
 
 class BaseEngine(object):
     def __init__(self, engine_path):
@@ -58,16 +60,20 @@ class BaseEngine(object):
 
     def inference(self, img_path, conf=0.5, end2end=False):
         origin_img = cv2.imread(img_path)
-        img, ratio = preproc(origin_img, self.imgsz, self.mean, self.std)
-        data = self.infer(img)
-        predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3)))[0] # does not using batch inference
-        print(predictions.shape)
-        dets = self.postprocess(predictions,ratio)
-        print(dets.shape)
+        #img, ratio = preproc_pad(origin_img, self.imgsz, self.mean, self.std)
+        #data = self.infer(img)
+        
+        resized_img, resized_img_tran = preproc(origin_img, self.imgsz)
+        data = self.infer(resized_img_tran)
+        #predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3)))[0] # does not using batch inference
+        #dets = self.postprocess(predictions,ratio)
+        predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3))) # does not using batch inference        
+        dets = self.postprocess_ops_nms(predictions=predictions)[0]
+        #print("output", len(dets), print(dets[0]))
         if dets is not None:
-            final_boxes, final_scores, final_key_points = dets[:,
-                                                             :4], dets[:, 4], dets[:, 5:]
-            origin_img = vis(origin_img, final_boxes, final_scores, final_key_points,
+            print(dets)
+            final_boxes, final_scores, final_key_points = dets[:,:4], dets[:, 4], dets[:, 5:]
+            origin_img = vis(resized_img, final_boxes, final_scores, final_key_points,
                              conf=conf, class_names=self.class_names)
         return origin_img
 
@@ -80,8 +86,7 @@ class BaseEngine(object):
         scores_mask = scores_mask.squeeze()
         if scores_mask.sum() == 0:
             return None       
-        print(boxes.shape, keypoints.shape, scores.shape)
-        print(scores_mask.sum())
+
         boxes = boxes[scores_mask, :]
         keypoints = keypoints[scores_mask, :]
         scores = scores[scores_mask, :]        
@@ -92,17 +97,51 @@ class BaseEngine(object):
         boxes_xyxy[:, 2] = boxes[:, 0] + boxes[:, 2] / 2.
         boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2.
         boxes_xyxy /= ratio
-        print(boxes_xyxy.shape)
-        print(scores.shape)
         keep = nms(boxes_xyxy, scores, nms_thr=0.45)
         dets_boxes = boxes_xyxy[keep]
         dets_scores = scores[keep]
         dets_keypoint = keypoints[keep]
-        print(dets_boxes.shape, dets_scores.shape, dets_keypoint.shape)
         num_idx = np.zeros([len(dets_boxes), 1])
         dets = np.concatenate([dets_boxes, dets_scores, dets_keypoint], 1)
         return dets
-
+    
+    @staticmethod
+    def postprocess_ops_nms(predictions, conf_thres =0.25, iou_thres=0.45, classes=None):
+        kpt_label=5
+        min_wh, max_wh = 2, 4096
+        prediction = torch.from_numpy(predictions)
+        print(prediction.shape)
+        xc = prediction[..., 4] > conf_thres
+        output = [torch.zeros((0, kpt_label*3+6), device=prediction.device)] * prediction.shape[0]
+        for xi, x in enumerate(prediction):  # image index, image inference
+            x = x[xc[xi]]  # confidence
+            # Compute conf
+            cx, cy, w, h = x[:,0:1], x[:,1:2], x[:,2:3], x[:,3:4]
+            obj_conf = x[:, 4:5]
+            #print("obj_conf :", obj_conf)
+            cls_conf = x[:, 5:6]
+            #print("cls_conf :", cls_conf)
+            kpts = x[:, 6:]
+            cls_conf = obj_conf * cls_conf  # conf = obj_conf * cls_conf
+            # Box (center x, center y, width, height) to (x1, y1, x2, y2)
+            x_min = cx - (w/2)
+            y_min = cy - (h/2)
+            x_max = cx + (w/2)
+            y_max = cy + (h/2)
+            box = torch.cat((x_min, y_min, x_max, y_max), 1)            
+            conf, j = cls_conf.max(1, keepdim=True)
+            #print("after class conf :", conf)
+            x = torch.cat((box, conf, j.float(), kpts), 1)[conf.view(-1) > conf_thres]
+            #print("x shape : ", x.shape)
+            c = x[:, 5:6] * 0
+            #print("c shape :", c)
+            boxes, scores = x[:, :4] +c , x[:, 4]  # boxes (offset by class), scores
+            #print("boxes.shape :", boxes.shape)
+            #print("box value :", boxes, scores)
+            i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
+            output[xi] = x[i]
+        return output
+        
     def get_fps(self):
         import time
         img = np.ones((1,3,self.imgsz[0], self.imgsz[1]))
@@ -125,7 +164,6 @@ def nms(boxes, scores, nms_thr):
 
     areas = (x2 - x1 + 1) * (y2 - y1 + 1)
     order = scores.argsort()[::-1]
-    print(scores[order][0:10])
     keep = []
     while order.size > 0:
         i = order[0]
@@ -169,8 +207,15 @@ def multiclass_nms(boxes, scores, nms_thr, score_thr):
         return None
     return np.concatenate(final_dets, 0)
 
+def preproc(image, input_size, swap=(2,0,1)):
+    resized_img = cv2.resize(image, input_size)
+    #resized_img = resized_img / 255
+    resized_img_transpose = resized_img.transpose(swap)
+    resized_img_transpose = resized_img_transpose / 255
+    resized_img_transpose = np.ascontiguousarray(resized_img_transpose, dtype=np.float32)
+    return resized_img, resized_img_transpose
 
-def preproc(image, input_size, mean, std, swap=(2, 0, 1)):
+def preproc_pad(image, input_size, mean, std, swap=(2, 0, 1)):
     if len(image.shape) == 3:
         padded_img = np.ones((input_size[0], input_size[1], 3)) * 114.0
     else:
@@ -212,11 +257,11 @@ _COLORS = rainbow_fill(80).astype(np.float32).reshape(-1, 3)
 
 
 def vis(img, boxes, scores, keypoints, conf=0.1, class_names=None):
+    #img = cv2.resize(img, (640, 640))
     for i in range(len(boxes)):
         box = boxes[i]
         cls_id = int(0)
         score = scores[i]
-        print(score)
         if score < conf:
             continue
         x0 = int(box[0])
