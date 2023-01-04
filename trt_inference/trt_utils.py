@@ -153,7 +153,49 @@ class BaseEngine(object):
         for _ in range(100):  # calculate average time
             _ = self.infer(img)
         print(100/(time.perf_counter() - t0), 'FPS')
-
+        
+    def detect_video(self, video_path, use_cam=True,conf=0.5, end2end=False):
+        if use_cam:
+            cap = cv2.VideoCapture(0)
+        else:
+            cap = cv2.VideoCapture(video_path)
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        #out = cv2.VideoWriter('./001.avi',fourcc,fps,(width,height))
+        fps = 0
+        import time
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            resized_img, blob = preproc(frame, self.imgsz)
+            # blob, ratio = preproc(frame, self.imgsz, self.mean, self.std)
+            t1 = time.time()
+            data = self.infer(blob)
+            fps = (fps + (1. / (time.time() - t1))) / 2
+            resized_img = cv2.putText(resized_img, "FPS:%d " %fps, (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 0, 255), 2)
+            if end2end:
+                num, final_boxes, final_scores, final_cls_inds = data
+                final_boxes = np.reshape(final_boxes/ratio, (-1, 4))
+                dets = np.concatenate([final_boxes[:num[0]], np.array(final_scores)[:num[0]].reshape(-1, 1), np.array(final_cls_inds)[:num[0]].reshape(-1, 1)], axis=-1)
+            else:
+                predictions = np.reshape(data, (1, -1, int(5+self.n_classes)))[0]
+                dets = self.postprocess_ops_nms(predictions)[0]
+            if dets is not None:
+                final_boxes, final_scores, final_cls_inds = dets[:,
+                                                                :4], dets[:, 4], dets[:, 5]
+                frame = vis(resized_img, final_boxes, final_scores, final_cls_inds,
+                                conf=conf, class_names=self.class_names)
+            cv2.imshow('frame', frame)
+            #out.write(frame)
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                break
+        #out.release()
+        cap.release()
+        cv2.destroyAllWindows()
 
 def nms(boxes, scores, nms_thr):
     """Single class NMS implemented in Numpy."""
