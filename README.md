@@ -1,4 +1,32 @@
-# yolov7-face
+# yolov7-face-trt
+***
+This code is designed to run the yolov7-face in a TensorRT-python environment.
+
+## to-do list
+
+- [ ] support webcam and video
+- [ ] support EfficientNMS_TRT
+- [ ] simplified code and optimized
+
+## trt build and run
+
+#### first. convert pytorch to onnx model (without include_nms)
+```
+# convert yolov7-tiny-face.pt to yolov7-tiny-face.onnx
+python3 models/export.py --weights yolov7-tiny-face.pt --grid --simplify
+```
+#### second. convert onnx model to trt model (use local machine)
+```
+# convert yolov7-tiny-face.onnx to yolov7-tiny-face.trt # (using fp16)
+python3 models/export_tensorrt.py -o yolov7-tiny-face.onnx -e yolov7-tiny-face.trt 
+```
+#### third. run trt model
+```
+python3 trt_inference/yolo_face_trt_inference.py -e yolov7-tiny-face.trt -i {image_path} -o {output_img_name}
+```
+
+## to do list
+
 
 ### New feature
 
