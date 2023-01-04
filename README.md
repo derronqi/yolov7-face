@@ -10,17 +10,24 @@ This code is designed to run the yolov7-face in a TensorRT-python environment.
 
 ## trt build and run
 
-#### first. convert pytorch to onnx model (without include_nms)
+#### prepare python library
+This code tested docker image nvcr.io/nvidia/pytorch:22.10-py3 (RTX3090), nvcr.io/nvidia/l4t-pytorch:r35.1.0-pth1.12-py3 (Jetson Orin)
+```
+pip install -r requirements.txt
+```
+
+
+#### First. convert pytorch to onnx model (without include_nms)
 ```
 # convert yolov7-tiny-face.pt to yolov7-tiny-face.onnx
 python3 models/export.py --weights yolov7-tiny-face.pt --grid --simplify
 ```
-#### second. convert onnx model to trt model (use local machine)
+#### Second. convert onnx model to trt model (use local machine)
 ```
 # convert yolov7-tiny-face.onnx to yolov7-tiny-face.trt # (using fp16)
 python3 models/export_tensorrt.py -o yolov7-tiny-face.onnx -e yolov7-tiny-face.trt 
 ```
-#### third. run trt model
+#### Third. run trt model
 ```
 python3 trt_inference/yolo_face_trt_inference.py -e yolov7-tiny-face.trt -i {image_path} -o {output_img_name}
 ```
