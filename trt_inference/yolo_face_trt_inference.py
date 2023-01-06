@@ -3,12 +3,13 @@ from trt_utils import BaseEngine
 import numpy as np
 import cv2
 import time
-import os
+import os, sys
 import argparse
+from loguru import logger
 
 class Predictor(BaseEngine):
-    def __init__(self, engine_path):
-        super(Predictor, self).__init__(engine_path)
+    def __init__(self, engine_path, logger):
+        super(Predictor, self).__init__(engine_path, logger)
         self.n_classes = 1  # your model classes
 
 if __name__ == '__main__':
@@ -16,14 +17,17 @@ if __name__ == '__main__':
     parser.add_argument("-e", "--engine", help="TRT engine Path")
     parser.add_argument("-i", "--image", help="image path")
     parser.add_argument("-o", "--output", help="image output path")
+    parser.add_argument("-l", "--log", default="./trt_infer.log",help="log path")
     parser.add_argument("-v", "--video",  help="video path or camera index ")
     parser.add_argument("--end2end", default=False, action="store_true",
                         help="use end2end engine")
 
     args = parser.parse_args()
     print(args)
-
-    pred = Predictor(engine_path=args.engine)
+    
+    logger.add(args.log)
+    
+    pred = Predictor(engine_path=args.engine, logger=logger)
     pred.get_fps()
     img_path = args.image
     video = args.video

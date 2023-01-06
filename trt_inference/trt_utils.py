@@ -8,12 +8,13 @@ import torch
 import torchvision
 
 class BaseEngine(object):
-    def __init__(self, engine_path):
+    def __init__(self, engine_path, logger):
         self.mean = None
         self.std = None
         self.n_classes = 1
         self.nkpt = 5
         self.class_names = ['face']
+        self.logger =logger
 
         logger = trt.Logger(trt.Logger.WARNING)
         logger.min_severity = trt.Logger.Severity.ERROR
@@ -54,7 +55,7 @@ class BaseEngine(object):
             cuda.memcpy_dtoh_async(out['host'], out['device'], self.stream)
         # synchronize stream
         self.stream.synchronize()
-
+        #self.logger.info("finished inference")
         data = [out['host'] for out in self.outputs]
         return data
 
@@ -67,11 +68,12 @@ class BaseEngine(object):
         data = self.infer(resized_img_tran)
         #predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3)))[0] # does not using batch inference
         #dets = self.postprocess(predictions,ratio)
+        self.logger.info('data shape : {data.shape}')
         predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3))) # does not using batch inference        
+        self.logger.info("post process start")
         dets = self.postprocess_ops_nms(predictions=predictions)[0]
         #print("output", len(dets), print(dets[0]))
         if dets is not None:
-            print(dets)
             final_boxes, final_scores, final_key_points = dets[:,:4], dets[:, 4], dets[:, 5:]
             origin_img = vis(resized_img, final_boxes, final_scores, final_key_points,
                              conf=conf, class_names=self.class_names)
@@ -110,7 +112,6 @@ class BaseEngine(object):
         kpt_label=5
         min_wh, max_wh = 2, 4096
         prediction = torch.from_numpy(predictions)
-        print(prediction.shape)
         xc = prediction[..., 4] > conf_thres
         output = [torch.zeros((0, kpt_label*3+6), device=prediction.device)] * prediction.shape[0]
         for xi, x in enumerate(prediction):  # image index, image inference
@@ -172,6 +173,7 @@ class BaseEngine(object):
                 break
             resized_img, blob = preproc(frame, self.imgsz)
             # blob, ratio = preproc(frame, self.imgsz, self.mean, self.std)
+            self.logger.info(f"resized img, blob shape : {blob.shape}")
             t1 = time.time()
             data = self.infer(blob)
             fps = (fps + (1. / (time.time() - t1))) / 2
@@ -182,7 +184,8 @@ class BaseEngine(object):
                 final_boxes = np.reshape(final_boxes/ratio, (-1, 4))
                 dets = np.concatenate([final_boxes[:num[0]], np.array(final_scores)[:num[0]].reshape(-1, 1), np.array(final_cls_inds)[:num[0]].reshape(-1, 1)], axis=-1)
             else:
-                predictions = np.reshape(data, (1, -1, int(5+self.n_classes)))[0]
+                self.logger.info("post process start")
+                predictions = np.reshape(data, (1, -1, int(5+self.n_classes+ self.nkpt*3)))[0]
                 dets = self.postprocess_ops_nms(predictions)[0]
             if dets is not None:
                 final_boxes, final_scores, final_cls_inds = dets[:,
