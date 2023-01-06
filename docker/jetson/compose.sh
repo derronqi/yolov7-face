@@ -4,7 +4,7 @@ export USERNAME=$(whoami)
 export CONTAINERNAME="yolo_jetson_pdh"
 printf "USERID=%s\n" $USERID 
 printf "GROUPID=%s\n" $GROUPID 
-printf "USERNAME=%s\n" $USERNAME 
+printf "USERNAME=%s\n" $USERNAME
 xhost +
 xhost +local:docker
 echo $xhost

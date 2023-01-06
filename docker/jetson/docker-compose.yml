@@ -11,7 +11,6 @@ services:
           container_name: ${CONTAINERNAME} 
           network_mode: "host"
           volumes:
-            - "${PWD}:/${PWD}"
             #- "/home/${USERNAME}/torch:/home/${USERNAME}/torch"
             - "/dev/video0:/dev/video0"
             - "/dev/video1:/dev/video1"

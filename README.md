@@ -4,7 +4,7 @@ This code is designed to run the yolov7-face in a TensorRT-python environment.
 
 ## to-do list
 
-- [ ] support webcam and video
+- [x] support webcam and video (but slow image & video)
 - [ ] support EfficientNMS_TRT
 - [ ] simplified code and optimized
 
@@ -12,8 +12,21 @@ This code is designed to run the yolov7-face in a TensorRT-python environment.
 
 #### prepare python library
 This code tested docker image nvcr.io/nvidia/pytorch:22.10-py3 (RTX3090), nvcr.io/nvidia/l4t-pytorch:r35.1.0-pth1.12-py3 (Jetson Orin)
+
+#### GPU setting
 ```
-pip install -r requirements.txt
+cd ./docker/gpu
+sh compose.sh # setting to docker container
+cd yolov7-face
+git checkout trt
+```
+
+#### jetson setting
+```
+cd ./docker/jetson
+sh compose.sh # setting to docker container
+cd yolov7-face
+git checkout trt
 ```
 
 
@@ -28,11 +41,16 @@ python3 models/export.py --weights yolov7-tiny-face.pt --grid --simplify
 python3 models/export_tensorrt.py -o yolov7-tiny-face.onnx -e yolov7-tiny-face.trt 
 ```
 #### Third. run trt model
+Run image inference
 ```
 python3 trt_inference/yolo_face_trt_inference.py -e yolov7-tiny-face.trt -i {image_path} -o {output_img_name}
 ```
 
-## to do list
+Run webcam inference
+```
+python3 trt_inference/yolo_face_trt_inference.py -e yolov7-tiny-face.trt -v 0
+
+```
 
 
 ### New feature

@@ -11,7 +11,7 @@ services:
           container_name: ${CONTAINERNAME} #"yolo_2210_pdh" 
           network_mode: "host"
           volumes:
-            - "/home/pdh/torch:/home/${USERNAME}/torch"
+            #- "/home/pdh/torch:/home/${USERNAME}/torch"
             - "/dev/:/dev/"
             - "/tmp/.X11-unix:/tmp/.X11-unix"
             - "/dev/snd:/dev/snd"

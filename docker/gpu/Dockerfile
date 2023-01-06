@@ -36,6 +36,7 @@ RUN pip install -U seaborn
 RUN pip3 install -U loguru
 USER ${USER_NAME}
 WORKDIR /home/${USER_NAME}
+RUN git clone https://github.com/pdh930105/yolov7-face.git
 
 ENTRYPOINT ["/opt/nvidia/nvidia_entrypoint.sh"]
 
