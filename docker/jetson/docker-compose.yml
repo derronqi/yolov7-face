@@ -1,0 +1,36 @@
+version: '3'
+services:
+        yolo_jetson_image:
+          build:
+            context: ./
+            args:
+              USER_ID: ${USERID}
+              GROUP_ID: ${GROUPID}
+              USER_NAME: ${USERNAME}
+          image: "yolo_jetson_image"
+          container_name: ${CONTAINERNAME} 
+          network_mode: "host"
+          volumes:
+            - "${PWD}:/${PWD}"
+            #- "/home/${USERNAME}/torch:/home/${USERNAME}/torch"
+            - "/dev/video0:/dev/video0"
+            - "/dev/video1:/dev/video1"
+            - "/dev/video2:/dev/video2"
+            - "/dev/video3:/dev/video3"
+            - "/dev/video4:/dev/video4"
+            - "/dev/video5:/dev/video5"
+            - "/tmp/.X11-unix:/tmp/.X11-unix:ro"
+            - "/dev/snd:/dev/snd"
+            - "$HOME/.Xauthority:/$HOME/.Xauthority:rw"
+            - "/home/${USERNAME}/.xsessionrc:/home/${USERMANE}/.xsessionrc"
+            - "/home/${USERNAME}/.ssh/:/home/${USERNAME}/.ssh/"
+            - "/data/:/data/"
+          runtime: "nvidia"
+          environment:
+            - "DISPLAY"
+
+          device_cgroup_rules:
+            - "c 81:* rmw"
+            - "c 189:* rmw"
+          stdin_open: true
+          tty: true
