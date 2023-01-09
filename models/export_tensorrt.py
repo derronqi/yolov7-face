@@ -251,12 +251,16 @@ class EngineBuilder:
     """
     Parses an ONNX graph and builds a TensorRT engine from it.
     """
-    def __init__(self, verbose=False, workspace=8):
+    def __init__(self, verbose=False, nkpt = 5, workspace=8, r_kpts=True):
         """
         :param verbose: If enabled, a higher verbosity level will be set on the TensorRT logger.
         :param workspace: Max memory workspace to allow, in Gb.
+        :param nkpt: Set keypoints (default : 5)
+        :param r_kpts: If true, return keypoints (using EfficientNMS_ONNX_TRT) false return face box only (using EfficientNMS_TRT)
         """
+        self.nkpt = nkpt
         self.trt_logger = trt.Logger(trt.Logger.INFO)
+        self.r_kpts = r_kpts
         if verbose:
             self.trt_logger.min_severity = trt.Logger.Severity.VERBOSE
 
@@ -303,30 +307,34 @@ class EngineBuilder:
         
         # but YOLOv7-face landmark detector can't use EfficientNMS_TRT (EfficientNMS_TRT does not return the boxes index, so can't find the keypoint in selected box)
         if end2end:
-            raise "please does not use yolov7-face"
             previous_output = self.network.get_output(0)
             self.network.unmark_output(previous_output)
-            # output [1, 8400, 85]
+            # output [1, 25200, 21]
             # slice boxes, obj_score, class_scores
             strides = trt.Dims([1,1,1])
             starts = trt.Dims([0,0,0])
             bs, num_boxes, temp = previous_output.shape
             shapes = trt.Dims([bs, num_boxes, 4])
-            # [0, 0, 0] [1, 8400, 4] [1, 1, 1]
+            # [0, 0, 0] [1, 25200, 4] [1, 1, 1]
             boxes = self.network.add_slice(previous_output, starts, shapes, strides)
-            num_classes = temp -5 
+            num_classes = temp - 5 - self.nkpt*3
             starts[2] = 4
             shapes[2] = 1
-            # [0, 0, 4] [1, 8400, 1] [1, 1, 1]
+            # [0, 0, 4] [1, 25200, 1] [1, 1, 1]
             obj_score = self.network.add_slice(previous_output, starts, shapes, strides)
             starts[2] = 5
             shapes[2] = num_classes
-            # [0, 0, 5] [1, 8400, 80] [1, 1, 1]
+            # [0, 0, 5] [1, 25200, 1] [1, 1, 1]
             scores = self.network.add_slice(previous_output, starts, shapes, strides)
             # scores = obj_score * class_scores => [bs, num_boxes, nc]
             updated_scores = self.network.add_elementwise(obj_score.get_output(0), scores.get_output(0), trt.ElementWiseOperation.PROD)
+            starts[3] = 5 + num_classes
+            shapes[2] = self.nkpt*3
+            # [0, 0, 6], [1, 25200, 15], [1, 1, 1]
+            keypoints = self.network.add_slice(previous_output, starts, shapes, strides)
 
             '''
+            "nms_type": "EfficientNMS_ONNX_TRT"
             "plugin_version": "1",
             "background_class": -1,  # no background class
             "max_output_boxes": detections_per_img,
@@ -336,26 +344,45 @@ class EngineBuilder:
             "box_coding": 1,
             '''
             registry = trt.get_plugin_registry()
-            assert(registry)
-            creator = registry.get_plugin_creator("EfficientNMS_TRT", "1")
-            assert(creator)
             fc = []
             fc.append(trt.PluginField("background_class", np.array([-1], dtype=np.int32), trt.PluginFieldType.INT32))
             fc.append(trt.PluginField("max_output_boxes", np.array([max_det], dtype=np.int32), trt.PluginFieldType.INT32))
             fc.append(trt.PluginField("score_threshold", np.array([conf_thres], dtype=np.float32), trt.PluginFieldType.FLOAT32))
             fc.append(trt.PluginField("iou_threshold", np.array([iou_thres], dtype=np.float32), trt.PluginFieldType.FLOAT32))
             fc.append(trt.PluginField("box_coding", np.array([1], dtype=np.int32), trt.PluginFieldType.INT32))
-            
-            fc = trt.PluginFieldCollection(fc) 
-            nms_layer = creator.create_plugin("nms_layer", fc)
 
-            layer = self.network.add_plugin_v2([boxes.get_output(0), updated_scores.get_output(0)], nms_layer)
-            layer.get_output(0).name = "num"
-            layer.get_output(1).name = "boxes"
-            layer.get_output(2).name = "scores"
-            layer.get_output(3).name = "classes"
-            for i in range(4):
-                self.network.mark_output(layer.get_output(i))
+            assert(registry)
+            
+            if self.r_kpts:
+                creator = registry.get_plugin_creator("EfficientNMS_ONNX_TRT", "1")
+                assert(creator)
+                
+                fc = trt.PluginFieldCollection(fc) 
+                nms_layer = creator.create_plugin("nms_layer", fc)
+
+                layer = self.network.add_plugin_v2([boxes.get_output(0), updated_scores.get_output(0)], nms_layer)
+                
+                selected_index_output_layer = self.network.add_gather(previous_output, layer.get_output(0))
+                self.network.mark_output(selected_index_output_layer.get_output(0))
+                #layer.get_output(0).name = "idx"
+                #return_nms_idx = layer.get_output(0)
+                
+                
+            else:
+                creator = registry.get_plugin_creator("EfficientNMS_TRT", "1")
+                assert(creator)
+                
+                fc = trt.PluginFieldCollection(fc) 
+                nms_layer = creator.create_plugin("nms_layer", fc)
+
+                layer = self.network.add_plugin_v2([boxes.get_output(0), updated_scores.get_output(0)], nms_layer)
+                
+                layer.get_output(0).name = "num"
+                layer.get_output(1).name = "boxes"
+                layer.get_output(2).name = "scores"
+                layer.get_output(3).name = "classes"
+                for i in range(4):
+                    self.network.mark_output(layer.get_output(i))
 
 
     def create_engine(self, engine_path, precision, calib_input=None, calib_cache=None, calib_num_images=5000,
