@@ -28,6 +28,7 @@ class BaseEngine(object):
         self.context = engine.create_execution_context()
         self.inputs, self.outputs, self.bindings = [], [], []
         self.stream = cuda.Stream()
+        
         for binding in engine:
             size = trt.volume(engine.get_binding_shape(binding))
             dtype = trt.nptype(engine.get_binding_dtype(binding))
@@ -72,11 +73,13 @@ class BaseEngine(object):
                 raise
             else:
                 num, final_boxes, final_scores, final_cls_inds = data
-                final_boxes = np.reshape(final_boxes, ratio, (-1, 4))
+                final_boxes = np.reshape(final_boxes/ratio, (-1, 4))
                 dets = np.concatenate([final_boxes[:num[0]], np.array(final_scores)[:num[0]].reshape(-1, 1), np.array(final_cls_inds)[:num[0]].reshape(-1, 1)], axis=-1)
+                print("num : ", num)
+                print("final boxes: ", final_boxes)
                 if dets is not None:
                     final_boxes, final_scores, final_classes = dets[:,:4], dets[:, 4], dets[:, 5]
-                    origin_img = vis(img, final_boxes, final_scores, final_classes,
+                    origin_img = vis_end2end(origin_img, final_boxes, final_scores, final_classes,
                                     conf=conf, class_names=self.class_names)
         else:
             resized_img, resized_img_tran = preproc(origin_img, self.imgsz)
@@ -318,7 +321,7 @@ _COLORS = rainbow_fill(80).astype(np.float32).reshape(-1, 3)
 def vis_end2end(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
     for i in range(len(boxes)):
         box = boxes[i]
-        cls_id = int(cls_ids[i])
+        cls_id = int(0)
         score = scores[i]
         if score < conf:
             continue

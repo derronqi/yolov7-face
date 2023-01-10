@@ -16,8 +16,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--engine", help="TRT engine Path")
     parser.add_argument("-i", "--image", help="image path")
-    parser.add_argument("-o", "--output", help="image output path")
-    parser.add_argument("-l", "--log", default="./trt_infer.log",help="log path")
+    parser.add_argument("-o", "--output", default="output_trt.png",help="image output path")
+    parser.add_argument("-l", "--log", default="./infer_trt.log",help="log path")
     parser.add_argument("-v", "--video",  help="video path or camera index ")
     parser.add_argument("--end2end", default=False, action="store_true",
                         help="use end2end engine")
@@ -34,7 +34,8 @@ if __name__ == '__main__':
     if img_path:
       origin_img = pred.inference(img_path, conf=0.1, end2end=args.end2end)
       print(origin_img.shape)
-
+      if origin_img.shape[0] == 3:
+        origin_img = origin_img.transpose(1, 2, 0)
       cv2.imwrite("%s" %args.output, origin_img)
     if video:
       pred.detect_video(video, conf=0.1, end2end=args.end2end) # set 0 use a webcam

@@ -1,3 +1,4 @@
 data/300W
 runs/
 *.trt
+*.log

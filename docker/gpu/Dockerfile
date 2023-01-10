@@ -27,13 +27,13 @@ RUN pip install timm
 RUN pip install yacs
 RUN pip install pyhocon
 RUN pip install -U fvcore
-RUN pip install -U transformers
-RUN pip install pytorch-lightning
 RUN pip install -U easydict
 RUN pip install -U pycuda
 RUN pip install -U onnxruntime
+RUN pip install -U onnxsim
 RUN pip install -U seaborn
-RUN pip3 install -U loguru
+RUN pip install -U loguru
+RUN pip install -U opencv-python >=4.1.1
 USER ${USER_NAME}
 WORKDIR /home/${USER_NAME}
 RUN git clone https://github.com/pdh930105/yolov7-face.git
