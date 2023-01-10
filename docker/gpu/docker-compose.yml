@@ -8,7 +8,7 @@ services:
               GROUP_ID: ${GROUPID}
               USER_NAME: ${USERNAME}
           image: "pdh/torch/yolo:2210"
-          container_name: ${CONTAINERNAME} #"yolo_2210_pdh" 
+          container_name: ${CONTAINERNAME}  #"yolo_2210_pdh" 
           network_mode: "host"
           volumes:
             #- "/home/pdh/torch:/home/${USERNAME}/torch"
