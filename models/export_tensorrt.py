@@ -251,16 +251,14 @@ class EngineBuilder:
     """
     Parses an ONNX graph and builds a TensorRT engine from it.
     """
-    def __init__(self, verbose=False, nkpt = 5, workspace=8, r_kpts=True):
+    def __init__(self, verbose=False, nkpt = 5, workspace=8):
         """
         :param verbose: If enabled, a higher verbosity level will be set on the TensorRT logger.
         :param workspace: Max memory workspace to allow, in Gb.
         :param nkpt: Set keypoints (default : 5)
-        :param r_kpts: If true, return keypoints (using EfficientNMS_ONNX_TRT) false return face box only (using EfficientNMS_TRT)
         """
         self.nkpt = nkpt
         self.trt_logger = trt.Logger(trt.Logger.INFO)
-        self.r_kpts = r_kpts
         if verbose:
             self.trt_logger.min_severity = trt.Logger.Severity.VERBOSE
 
@@ -275,10 +273,11 @@ class EngineBuilder:
         self.network = None
         self.parser = None
 
-    def create_network(self, onnx_path, end2end, conf_thres, iou_thres, max_det):
+    def create_network(self, onnx_path, end2end, conf_thres, iou_thres, max_det, r_kpts=False):
         """
         Parse the ONNX graph and create the corresponding TensorRT network definition.
         :param onnx_path: The path to the ONNX graph to load.
+        :param r_kpts: If true, return keypoints (using EfficientNMS_ONNX_TRT) false return face box only (using EfficientNMS_TRT)
         """
         network_flags = (1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
 
@@ -297,9 +296,9 @@ class EngineBuilder:
         outputs = [self.network.get_output(i) for i in range(self.network.num_outputs)]
 
         print("Network Description")
-        for input in inputs:
-            self.batch_size = input.shape[0]
-            print("Input '{}' with shape {} and dtype {}".format(input.name, input.shape, input.dtype))
+        for input_img in inputs:
+            self.batch_size = input_img.shape[0]
+            print("Input '{}' with shape {} and dtype {}".format(input_img.name, input_img.shape, input_img.dtype))
         for output in outputs:
             print("Output '{}' with shape {} and dtype {}".format(output.name, output.shape, output.dtype))
         assert self.batch_size > 0
@@ -328,10 +327,10 @@ class EngineBuilder:
             scores = self.network.add_slice(previous_output, starts, shapes, strides)
             # scores = obj_score * class_scores => [bs, num_boxes, nc]
             updated_scores = self.network.add_elementwise(obj_score.get_output(0), scores.get_output(0), trt.ElementWiseOperation.PROD)
-            starts[3] = 5 + num_classes
-            shapes[2] = self.nkpt*3
+            #starts[2] = 5 + num_classes
+            #shapes[2] = self.nkpt*3
             # [0, 0, 6], [1, 25200, 15], [1, 1, 1]
-            keypoints = self.network.add_slice(previous_output, starts, shapes, strides)
+            #keypoints = self.network.add_slice(previous_output, starts, shapes, strides)
 
             '''
             "nms_type": "EfficientNMS_ONNX_TRT"
@@ -344,34 +343,38 @@ class EngineBuilder:
             "box_coding": 1,
             '''
             registry = trt.get_plugin_registry()
-            fc = []
-            fc.append(trt.PluginField("background_class", np.array([-1], dtype=np.int32), trt.PluginFieldType.INT32))
-            fc.append(trt.PluginField("max_output_boxes", np.array([max_det], dtype=np.int32), trt.PluginFieldType.INT32))
-            fc.append(trt.PluginField("score_threshold", np.array([conf_thres], dtype=np.float32), trt.PluginFieldType.FLOAT32))
-            fc.append(trt.PluginField("iou_threshold", np.array([iou_thres], dtype=np.float32), trt.PluginFieldType.FLOAT32))
-            fc.append(trt.PluginField("box_coding", np.array([1], dtype=np.int32), trt.PluginFieldType.INT32))
 
             assert(registry)
             
-            if self.r_kpts:
+            if r_kpts:
                 creator = registry.get_plugin_creator("EfficientNMS_ONNX_TRT", "1")
                 assert(creator)
-                
+                fc = []
+                fc.append(trt.PluginField("max_output_boxes_per_class", np.array([max_det], dtype=np.int32), trt.PluginFieldType.INT32))
+                fc.append(trt.PluginField("score_threshold", np.array([conf_thres], dtype=np.float32), trt.PluginFieldType.FLOAT32))
+                fc.append(trt.PluginField("iou_threshold", np.array([iou_thres], dtype=np.float32), trt.PluginFieldType.FLOAT32))
+                fc.append(trt.PluginField("center_point_box", np.array([1], dtype=np.int32), trt.PluginFieldType.INT32))                
                 fc = trt.PluginFieldCollection(fc) 
                 nms_layer = creator.create_plugin("nms_layer", fc)
 
                 layer = self.network.add_plugin_v2([boxes.get_output(0), updated_scores.get_output(0)], nms_layer)
-                
-                selected_index_output_layer = self.network.add_gather(previous_output, layer.get_output(0))
-                self.network.mark_output(selected_index_output_layer.get_output(0))
+                layer.get_output(0).name = "num"
+                #selected_index_output_layer = self.network.add_gather(previous_output, layer.get_output(0), axis=1)
+                #self.network.mark_output(selected_index_output_layer.get_output(0))
                 #layer.get_output(0).name = "idx"
                 #return_nms_idx = layer.get_output(0)
-                
-                
+                print(layer)
+                print(layer.get_output(0))
+                self.network.mark_output(layer.get_output(0))
             else:
                 creator = registry.get_plugin_creator("EfficientNMS_TRT", "1")
                 assert(creator)
-                
+                fc = []
+                fc.append(trt.PluginField("background_class", np.array([-1], dtype=np.int32), trt.PluginFieldType.INT32))
+                fc.append(trt.PluginField("max_output_boxes", np.array([max_det], dtype=np.int32), trt.PluginFieldType.INT32))
+                fc.append(trt.PluginField("score_threshold", np.array([conf_thres], dtype=np.float32), trt.PluginFieldType.FLOAT32))
+                fc.append(trt.PluginField("iou_threshold", np.array([iou_thres], dtype=np.float32), trt.PluginFieldType.FLOAT32))
+                fc.append(trt.PluginField("box_coding", np.array([1], dtype=np.int32), trt.PluginFieldType.INT32))
                 fc = trt.PluginFieldCollection(fc) 
                 nms_layer = creator.create_plugin("nms_layer", fc)
 
@@ -428,13 +431,14 @@ class EngineBuilder:
                                      exact_batches=True))
 
         # with self.builder.build_engine(self.network, self.config) as engine, open(engine_path, "wb") as f:
+        # builder.build_serialized_network is error
         with self.builder.build_serialized_network(self.network, self.config) as engine, open(engine_path, "wb") as f:
             print("Serializing engine to file: {:}".format(engine_path))
             f.write(engine)  # .serialize()
 
 def main(args):
     builder = EngineBuilder(args.verbose, args.workspace)
-    builder.create_network(args.onnx, args.end2end, args.conf_thres, args.iou_thres, args.max_det)
+    builder.create_network(args.onnx, args.end2end, args.conf_thres, args.iou_thres, args.max_det, args.rkpts)
     builder.create_engine(args.engine, args.precision, args.calib_input, args.calib_cache, args.calib_num_images,
                           args.calib_batch_size)
 
@@ -456,6 +460,9 @@ if __name__ == "__main__":
                         help="The batch size for the calibration process, default: 8")
     parser.add_argument("--end2end", default=False, action="store_true",
                         help="export the engine include nms plugin, default: False")
+    parser.add_argument("--rkpts", default=False, action='store_true',
+                        help="return key_points when using end2end, default: False" 
+                        )
     parser.add_argument("--conf_thres", default=0.4, type=float,
                         help="The conf threshold for the nms, default: 0.4")
     parser.add_argument("--iou_thres", default=0.5, type=float,

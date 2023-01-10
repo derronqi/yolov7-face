@@ -16,9 +16,9 @@ services:
             - "/tmp/.X11-unix:/tmp/.X11-unix"
             - "/dev/snd:/dev/snd"
             - "$HOME/.Xauthority:/$HOME/.Xauthority:rw"
-            - "/dataset:/dataset"
-            - "/data:/data"
-            - "/home/${USERNAME}/.ssh/:/home/${USERNAME}/.ssh/"
+            #- "/dataset:/dataset"
+            #- "/data:/data"
+            #- "/home/${USERNAME}/.ssh/:/home/${USERNAME}/.ssh/"
           environment:
             - "DISPLAY"
           device_cgroup_rules:

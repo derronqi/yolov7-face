@@ -13,6 +13,7 @@ class BaseEngine(object):
         self.std = None
         self.n_classes = 1
         self.nkpt = 5
+        self.use_onnx_trt = False
         self.class_names = ['face']
         self.logger =logger
 
@@ -64,19 +65,33 @@ class BaseEngine(object):
         #img, ratio = preproc_pad(origin_img, self.imgsz, self.mean, self.std)
         #data = self.infer(img)
         
-        resized_img, resized_img_tran = preproc(origin_img, self.imgsz)
-        data = self.infer(resized_img_tran)
-        #predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3)))[0] # does not using batch inference
-        #dets = self.postprocess(predictions,ratio)
-        self.logger.info('data shape : {data.shape}')
-        predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3))) # does not using batch inference        
-        self.logger.info("post process start")
-        dets = self.postprocess_ops_nms(predictions=predictions)[0]
-        #print("output", len(dets), print(dets[0]))
-        if dets is not None:
-            final_boxes, final_scores, final_key_points = dets[:,:4], dets[:, 4], dets[:, 5:]
-            origin_img = vis(resized_img, final_boxes, final_scores, final_key_points,
-                             conf=conf, class_names=self.class_names)
+        if end2end:
+            img, ratio = preproc_pad(origin_img, self.imgsz, self.mean, self.std)
+            data = self.infer(img)
+            if self.use_onnx_trt:
+                raise
+            else:
+                num, final_boxes, final_scores, final_cls_inds = data
+                final_boxes = np.reshape(final_boxes, ratio, (-1, 4))
+                dets = np.concatenate([final_boxes[:num[0]], np.array(final_scores)[:num[0]].reshape(-1, 1), np.array(final_cls_inds)[:num[0]].reshape(-1, 1)], axis=-1)
+                if dets is not None:
+                    final_boxes, final_scores, final_classes = dets[:,:4], dets[:, 4], dets[:, 5]
+                    origin_img = vis(img, final_boxes, final_scores, final_classes,
+                                    conf=conf, class_names=self.class_names)
+        else:
+            resized_img, resized_img_tran = preproc(origin_img, self.imgsz)
+            data = self.infer(resized_img_tran)
+            #predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3)))[0] # does not using batch inference
+            #dets = self.postprocess(predictions,ratio)
+            self.logger.info('data shape : {data.shape}')
+            predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3))) # does not using batch inference        
+            self.logger.info("post process start")
+            dets = self.postprocess_ops_nms(predictions=predictions)[0]
+            #print("output", len(dets), print(dets[0]))
+            if dets is not None:
+                final_boxes, final_scores, final_key_points = dets[:,:4], dets[:, 4], dets[:, 5:]
+                origin_img = vis(resized_img, final_boxes, final_scores, final_key_points,
+                                conf=conf, class_names=self.class_names)
         return origin_img
 
     @staticmethod
@@ -154,7 +169,7 @@ class BaseEngine(object):
         for _ in range(100):  # calculate average time
             _ = self.infer(img)
         print(100/(time.perf_counter() - t0), 'FPS')
-        
+    """
     def detect_video(self, video_path, use_cam=True,conf=0.5, end2end=False):
         if use_cam:
             cap = cv2.VideoCapture(0)
@@ -199,7 +214,7 @@ class BaseEngine(object):
         #out.release()
         cap.release()
         cv2.destroyAllWindows()
-
+    """
 def nms(boxes, scores, nms_thr):
     """Single class NMS implemented in Numpy."""
     x1 = boxes[:, 0]
@@ -276,14 +291,14 @@ def preproc_pad(image, input_size, mean, std, swap=(2, 0, 1)):
     # if use yolox set
     # padded_img = padded_img[:, :, ::-1]
     # padded_img /= 255.0
-    padded_img = padded_img[:, :, ::-1]
-    padded_img /= 255.0
+    padded_img = padded_img[:, :, ::-1] # bgr to rgb
+    padded_img /= 255.0 # normalize
     if mean is not None:
         padded_img -= mean
     if std is not None:
         padded_img /= std
-    padded_img = padded_img.transpose(swap)
-    padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
+    padded_img = padded_img.transpose(swap) # h, w, c to c, h, w
+    padded_img = np.ascontiguousarray(padded_img, dtype=np.float32) # stream for cuda
     return padded_img, r
 
 
@@ -300,6 +315,37 @@ def rainbow_fill(size=50):  # simpler way to generate rainbow color
 
 _COLORS = rainbow_fill(80).astype(np.float32).reshape(-1, 3)
 
+def vis_end2end(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
+    for i in range(len(boxes)):
+        box = boxes[i]
+        cls_id = int(cls_ids[i])
+        score = scores[i]
+        if score < conf:
+            continue
+        x0 = int(box[0])
+        y0 = int(box[1])
+        x1 = int(box[2])
+        y1 = int(box[3])
+
+        color = (_COLORS[cls_id] * 255).astype(np.uint8).tolist()
+        text = '{}:{:.1f}%'.format(class_names[cls_id], score * 100)
+        txt_color = (0, 0, 0) if np.mean(_COLORS[cls_id]) > 0.5 else (255, 255, 255)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+
+        txt_size = cv2.getTextSize(text, font, 0.4, 1)[0]
+        cv2.rectangle(img, (x0, y0), (x1, y1), color, 2)
+
+        txt_bk_color = (_COLORS[cls_id] * 255 * 0.7).astype(np.uint8).tolist()
+        cv2.rectangle(
+            img,
+            (x0, y0 + 1),
+            (x0 + txt_size[0] + 1, y0 + int(1.5 * txt_size[1])),
+            txt_bk_color,
+            -1
+        )
+        cv2.putText(img, text, (x0, y0 + txt_size[1]), font, 0.4, txt_color, thickness=1)
+
+    return img
 
 def vis(img, boxes, scores, keypoints, conf=0.1, class_names=None):
     #img = cv2.resize(img, (640, 640))

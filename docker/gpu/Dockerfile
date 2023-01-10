@@ -20,8 +20,8 @@ RUN apt-get install x11-apps -y
 
 RUN addgroup --gid $GROUP_ID $USER_NAME
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER_NAME
-RUN echo '${USER_NAME}:{USER_NAME}'|chpasswd
-RUN adduser pdh sudo
+RUN echo '${USER_NAME}:${USER_NAME}'|chpasswd
+RUN adduser ${USER_NAME} sudo
 RUN echo '${USER_NAME} ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN pip install timm
 RUN pip install yacs
