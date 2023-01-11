@@ -33,8 +33,10 @@ RUN pip install -U onnxruntime
 RUN pip install -U onnxsim
 RUN pip install -U seaborn
 RUN pip install -U loguru
-RUN pip install -U opencv-python >=4.1.1
+RUN pip install -U opencv-python==4.5.5.64
 USER ${USER_NAME}
+RUN git config --global user.name "pdh"
+RUN git config --global user.email "pdh930105@gmail.com"
 WORKDIR /home/${USER_NAME}
 RUN git clone https://github.com/pdh930105/yolov7-face.git
 

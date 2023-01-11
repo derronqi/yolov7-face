@@ -2,3 +2,6 @@ data/300W
 runs/
 *.trt
 *.log
+*.torchscript
+*.torchscript.pt
+**/*.pyc
