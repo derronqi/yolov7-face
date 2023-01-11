@@ -11,7 +11,7 @@
 
 | Method           |  Test Size | Easy  | Medium | Hard  | FLOPs (B) @640 | Google | Baidu |
 | -----------------| ---------- | ----- | ------ | ----- | -------------- | ------ | ----- |
-| yolov7-lite-t    | 640        | 88.7  | 85.2   | 71.5  |  0.8           | [google](https://drive.google.com/file/d/1HNXd9EdS-BJ4dk7t1xJDFfr1JIHjd5yb/view?usp=sharing) | - |
+| yolov7-lite-t    | 640        | 88.7  | 85.2   | 71.5  |  0.8           | [google](https://drive.google.com/file/d/1HNXd9EdS-BJ4dk7t1xJDFfr1JIHjd5yb/view?usp=sharing) | [gsmn](https://pan.baidu.com/s/1oxlJVveUgHUQs4UiR26aCw) |
 | yolov7-lite-s    | 640        | 92.7  | 89.9   | 78.5  |  3.0           | [google](https://drive.google.com/file/d/1MIC5vD4zqRLF_uEZHzjW_f-G3TsfaOAf/view?usp=sharing) | - |
 | yolov7-tiny      | 640        | 94.7  | 92.6   | 82.1  |  13.2          | [google](https://drive.google.com/file/d/1Mona-I4PclJr5mjX1qb8dgDeMpYyBcwM/view?usp=sharing) | [aujs](https://pan.baidu.com/s/1IzHLQc2RbPyuDgEqgY8hUg) |
 | yolov7s          | 640        | 94.8  | 93.1   | 85.2  |  16.8          | [google](https://drive.google.com/file/d/1_ZjnNF_JKHVlq41EgEqMoGE2TtQ3SYmZ/view?usp=sharing) | - |
