@@ -34,6 +34,7 @@ RUN pip install -U onnxsim
 RUN pip install -U seaborn
 RUN pip install -U loguru
 RUN pip install -U opencv-python==4.5.5.64
+RUN pip install -U pyrealsense2
 USER ${USER_NAME}
 RUN git config --global user.name "pdh"
 RUN git config --global user.email "pdh930105@gmail.com"

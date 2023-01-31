@@ -5,7 +5,7 @@ This code is designed to run the yolov7-face in a TensorRT-python environment.
 ## to-do list
 
 - [x] support webcam and video (but slow image & video)
-- [ ] support EfficientNMS_TRT
+- [X] support EfficientNMS_TRT
 - [ ] simplified code and optimized
 
 ## trt build and run
@@ -18,7 +18,7 @@ This code tested docker image nvcr.io/nvidia/pytorch:22.10-py3 (RTX3090), nvcr.i
 cd ./docker/gpu
 sh compose.sh # setting to docker container
 cd yolov7-face
-git checkout trt
+git checkout trt_nms
 ```
 
 #### jetson setting
@@ -26,7 +26,7 @@ git checkout trt
 cd ./docker/jetson
 sh compose.sh # setting to docker container
 cd yolov7-face
-git checkout trt
+git checkout trt_nms
 ```
 
 
@@ -37,20 +37,36 @@ python3 models/export.py --weights yolov7-tiny-face.pt --grid --simplify
 ```
 #### Second. convert onnx model to trt model (use local machine)
 ```
-# convert yolov7-tiny-face.onnx to yolov7-tiny-face.trt # (using fp16)
+# convert yolov7-tiny-face.onnx to yolov7-tiny-face.trt (without nms) # (using fp16)
 python3 models/export_tensorrt.py -o yolov7-tiny-face.onnx -e yolov7-tiny-face.trt 
+```
+```
+# convert yolov7-tiny-face.onnx to end2end.trt (with nms)
+python3 models/export_tensorrt.py -o yolov7-tiny-face.onnx -e end2end.trt --end2end
 ```
 #### Third. run trt model
 Run image inference
 ```
+# use pytorch nms
 python3 trt_inference/yolo_face_trt_inference.py -e yolov7-tiny-face.trt -i {image_path} -o {output_img_name}
 ```
+```
+# using end2end machine
+python3 trt_inference/yolo_face_trt_inference.py -e end2end.trt -i image.jpg
+```
 
-Run webcam inference
+### Run webcam inference
+#### using torchvision nms
 ```
 python3 trt_inference/yolo_face_trt_inference.py -e yolov7-tiny-face.trt -v 0
 
 ```
+#### using tensorrt nms
+```
+python3 trt_inference/yolo_face_trt_inference.py -e end2end -v 0
+```
+
+
 
 
 ### New feature
