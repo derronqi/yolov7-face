@@ -1,15 +1,17 @@
 export USERID=$(id -u)
 export GROUPID=$(id -g)
 export USERNAME=$(whoami)
-export CONTAINERNAME="yolo_jetson_pdh"
+export CONTAINERNAME="yolo_jetson_pdh_rs"
 printf "USERID=%s\n" $USERID 
 printf "GROUPID=%s\n" $GROUPID 
-printf "USERNAME=%s\n" $USERNAME
+printf "USERNAME=%s\n" $USERNAME 
 xhost +
 xhost +local:docker
 echo $xhost
-#docker-compose up -d --force-recreate --no-deps --build
 docker-compose rm -f 
+#docker-compose up -d 
+#docker-compose up -d --force-recreate --no-deps --build --no-cache
+#docker-compose rm -f
 docker-compose up -d --build 
 
 docker exec ${CONTAINERNAME} echo "xhost's display : "
