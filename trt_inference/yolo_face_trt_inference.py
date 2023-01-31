@@ -38,4 +38,4 @@ if __name__ == '__main__':
         origin_img = origin_img.transpose(1, 2, 0)
       cv2.imwrite("%s" %args.output, origin_img)
     if video:
-      pred.detect_video(video, conf=0.1, end2end=args.end2end) # set 0 use a webcam
+      pred.detect_video(video, conf=0.5, end2end=args.end2end) # set 0 use a webcam

@@ -50,11 +50,13 @@ if __name__ == '__main__':
 
     # Input
     img = torch.zeros(opt.batch_size, 3, *opt.img_size).to(device)  # image size(1,3,320,192) iDetection
-    # img = cv2.imread("/user/a0132471/Files/bit-bucket/pytorch/jacinto-ai-pytest/data/results/datasets/pytorch_coco_mmdet_img_resize640_val2017_5k_yolov5/images/val2017/000000000139.png")
-    # img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
-    # img = np.ascontiguousarray(img)
-    # img = torch.tensor(img[None,:,:,:], dtype = torch.float32)
-    # img /= 255
+
+    img = cv2.imread('./image.jpg')
+    img = cv2.resize(img, dsize=(opt.img_size[0], opt.img_size[1]))
+    img = img[:, :, ::-1].transpose(2,0,1)
+    img = np.ascontiguousarray(img)
+    img = torch.tensor(img[None, :, :, :], dtype=torch.float32)
+    img = img*(1/255)
 
     # Update model
     for k, m in model.named_modules():
@@ -69,6 +71,12 @@ if __name__ == '__main__':
     model.model[-1].export = not (opt.grid or opt.export_nms) # set Detect() layer grid export
     for _ in range(2):
         y = model(img)  # dry runs
+    print(y[:,:,4])
+    print(y[:,:,4].max(), y[:,:,4].min())
+    print(y[:,:,5])
+    print(y[:,:,5].max(), y[:,:,5].min())
+    print((y[:,:,4]*y[:,:,5]).max())
+    
     output_names = ["output"]
     if opt.export_nms:
         nms = models.common.NMS(conf=0.01, kpt_label=5) # modified yolov7-face

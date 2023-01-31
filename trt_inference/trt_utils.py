@@ -77,6 +77,8 @@ class BaseEngine(object):
                 dets = np.concatenate([final_boxes[:num[0]], np.array(final_scores)[:num[0]].reshape(-1, 1), np.array(final_cls_inds)[:num[0]].reshape(-1, 1)], axis=-1)
                 print("num : ", num)
                 print("final boxes: ", final_boxes)
+                print("score : ", final_scores[:num[0]])
+                print("final cls inds :", final_cls_inds)
                 if dets is not None:
                     final_boxes, final_scores, final_classes = dets[:,:4], dets[:, 4], dets[:, 5]
                     origin_img = vis_end2end(origin_img, final_boxes, final_scores, final_classes,
@@ -178,46 +180,49 @@ class BaseEngine(object):
             cap = cv2.VideoCapture(0)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-            cap.set(cv2.CAP_PROP_FRAME_COUNT, 30)
+            cap.set(cv2.CAP_PROP_FRAME_COUNT, 5)
         else:
             cap = cv2.VideoCapture(video_path)
         
         #out = cv2.VideoWriter('./001.avi',fourcc,fps,(width,height))
         fps = 0
         import time
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            resized_img, blob = preproc(frame, self.imgsz)
-            # blob, ratio = preproc(frame, self.imgsz, self.mean, self.std)
-            self.logger.info(f"resized img, blob shape : {blob.shape}")
-            t1 = time.time()
-            data = self.infer(blob)
-            fps = (fps + (1. / (time.time() - t1))) / 2
-            resized_img = cv2.putText(resized_img, "FPS:%d " %fps, (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                                (0, 0, 255), 2)
-            if end2end:
+        if end2end:
+            while True:
+                ret, frame = cap.read()
+                print("frame : ", frame.shape)
+                if not ret:
+                    break
+                blob, ratio = preproc_pad(frame, self.imgsz, self.mean, self.std)
+                t1 = time.time()
+                data = self.infer(blob)
+                fps = (fps + (1. / (time.time() - t1))) / 2
+                resized_img = cv2.putText(blob, "FPS:%d " %fps, (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                    (0, 0, 255), 2)
+            
                 num, final_boxes, final_scores, final_cls_inds = data
+                print(num)
                 final_boxes = np.reshape(final_boxes/ratio, (-1, 4))
                 dets = np.concatenate([final_boxes[:num[0]], np.array(final_scores)[:num[0]].reshape(-1, 1), np.array(final_cls_inds)[:num[0]].reshape(-1, 1)], axis=-1)
-            else:
-                self.logger.info("post process start")
-                predictions = np.reshape(data, (1, -1, int(5+self.n_classes+ self.nkpt*3)))[0]
-                dets = self.postprocess_ops_nms(predictions)[0]
-            if dets is not None:
-                final_boxes, final_scores, final_cls_inds = dets[:,
-                                                                :4], dets[:, 4], dets[:, 5]
-                frame = vis(resized_img, final_boxes, final_scores, final_cls_inds,
-                                conf=conf, class_names=self.class_names)
-            cv2.imshow('frame', frame)
-            #out.write(frame)
-            if cv2.waitKey(25) & 0xFF == ord('q'):
-                break
-        #out.release()
-        cap.release()
-        cv2.destroyAllWindows()
-    
+                if dets is not None:
+                    final_boxes, final_scores, final_cls_inds = dets[:,
+                                                                    :4], dets[:, 4], dets[:, 5]
+                    frame = vis_end2end(resized_img, final_boxes, final_scores, final_cls_inds,
+                                    conf=conf, class_names=self.class_names)
+                vis_frame = frame[::-1,:, :].transpose([1,2,0])
+                cv2.imshow('frame', vis_frame)
+                #out.write(frame)
+                if cv2.waitKey(25) & 0xFF == ord('q'):
+                    break
+            #out.release()
+            cap.release()
+            cv2.destroyAllWindows()
+        else:
+            self.logger.info("post process start")
+            predictions = np.reshape(data, (1, -1, int(5+self.n_classes+ self.nkpt*3)))[0]
+            dets = self.postprocess_ops_nms(predictions)[0]
+        
+        
 def nms(boxes, scores, nms_thr):
     """Single class NMS implemented in Numpy."""
     x1 = boxes[:, 0]
@@ -331,7 +336,7 @@ def vis_end2end(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
         y1 = int(box[3])
 
         color = (_COLORS[cls_id] * 255).astype(np.uint8).tolist()
-        text = '{}:{:.1f}%'.format(class_names[cls_id], score * 100)
+        text = '{}:{:.1f}%'.format(class_names[cls_id], score)
         txt_color = (0, 0, 0) if np.mean(_COLORS[cls_id]) > 0.5 else (255, 255, 255)
         font = cv2.FONT_HERSHEY_SIMPLEX
 
