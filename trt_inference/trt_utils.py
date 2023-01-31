@@ -172,16 +172,16 @@ class BaseEngine(object):
         for _ in range(100):  # calculate average time
             _ = self.infer(img)
         print(100/(time.perf_counter() - t0), 'FPS')
-    """
+    
     def detect_video(self, video_path, use_cam=True,conf=0.5, end2end=False):
         if use_cam:
             cap = cv2.VideoCapture(0)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            cap.set(cv2.CAP_PROP_FRAME_COUNT, 30)
         else:
             cap = cv2.VideoCapture(video_path)
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
         #out = cv2.VideoWriter('./001.avi',fourcc,fps,(width,height))
         fps = 0
         import time
@@ -217,7 +217,7 @@ class BaseEngine(object):
         #out.release()
         cap.release()
         cv2.destroyAllWindows()
-    """
+    
 def nms(boxes, scores, nms_thr):
     """Single class NMS implemented in Numpy."""
     x1 = boxes[:, 0]
