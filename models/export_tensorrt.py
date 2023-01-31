@@ -317,6 +317,7 @@ class EngineBuilder:
             # [0, 0, 0] [1, 25200, 4] [1, 1, 1]
             boxes = self.network.add_slice(previous_output, starts, shapes, strides)
             num_classes = temp - 5 - self.nkpt*3
+            print(num_classes)
             starts[2] = 4
             shapes[2] = 1
             # [0, 0, 4] [1, 25200, 1] [1, 1, 1]
@@ -386,7 +387,8 @@ class EngineBuilder:
                 layer.get_output(3).name = "classes"
                 for i in range(4):
                     self.network.mark_output(layer.get_output(i))
-
+                # test
+                
 
     def create_engine(self, engine_path, precision, calib_input=None, calib_cache=None, calib_num_images=5000,
                       calib_batch_size=8):
@@ -437,7 +439,7 @@ class EngineBuilder:
             f.write(engine)  # .serialize()
 
 def main(args):
-    builder = EngineBuilder(args.verbose, args.workspace)
+    builder = EngineBuilder(args.verbose, args.n_kpts, args.workspace)
     builder.create_network(args.onnx, args.end2end, args.conf_thres, args.iou_thres, args.max_det, args.rkpts)
     builder.create_engine(args.engine, args.precision, args.calib_input, args.calib_cache, args.calib_num_images,
                           args.calib_batch_size)
@@ -460,6 +462,7 @@ if __name__ == "__main__":
                         help="The batch size for the calibration process, default: 8")
     parser.add_argument("--end2end", default=False, action="store_true",
                         help="export the engine include nms plugin, default: False")
+    parser.add_argument("--n_kpts", default=5, help="# of keypoints")
     parser.add_argument("--rkpts", default=False, action='store_true',
                         help="return key_points when using end2end, default: False" 
                         )

@@ -73,6 +73,9 @@ class BaseEngine(object):
                 raise
             else:
                 num, final_boxes, final_scores, final_cls_inds = data
+                for trt_output in data:
+                    print(trt_output.shape)
+                print(num[num>100])
                 final_boxes = np.reshape(final_boxes/ratio, (-1, 4))
                 dets = np.concatenate([final_boxes[:num[0]], np.array(final_scores)[:num[0]].reshape(-1, 1), np.array(final_cls_inds)[:num[0]].reshape(-1, 1)], axis=-1)
                 print("num : ", num)
@@ -88,8 +91,11 @@ class BaseEngine(object):
             data = self.infer(resized_img_tran)
             #predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3)))[0] # does not using batch inference
             #dets = self.postprocess(predictions,ratio)
-            self.logger.info('data shape : {data.shape}')
+            #self.logger.info(f'data shape : {data.shape}')
+            print(len(data))
             predictions = np.reshape(data, (1, -1, int(5+self.n_classes + self.nkpt*3))) # does not using batch inference        
+            print(predictions[:, :, 4].max())
+            print(predictions[:, :, 5].max())
             self.logger.info("post process start")
             dets = self.postprocess_ops_nms(predictions=predictions)[0]
             #print("output", len(dets), print(dets[0]))
@@ -336,7 +342,7 @@ def vis_end2end(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
         y1 = int(box[3])
 
         color = (_COLORS[cls_id] * 255).astype(np.uint8).tolist()
-        text = '{}:{:.1f}%'.format(class_names[cls_id], score)
+        text = '{}:{:.1f}%'.format(class_names[cls_id], score*100)
         txt_color = (0, 0, 0) if np.mean(_COLORS[cls_id]) > 0.5 else (255, 255, 255)
         font = cv2.FONT_HERSHEY_SIMPLEX
 
