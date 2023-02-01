@@ -207,7 +207,9 @@ class BaseEngine(object):
                                     (0, 0, 255), 2)
             
                 num, final_boxes, final_scores, final_cls_inds = data
-                print(num)
+                self.logger.info('detected face : ', num)
+                self.logger.info('boxes info :', final_boxes[:num[0]])
+                self.logger.info(f'predict : {final_scores[:num[0]]*100}%')
                 final_boxes = np.reshape(final_boxes/ratio, (-1, 4))
                 dets = np.concatenate([final_boxes[:num[0]], np.array(final_scores)[:num[0]].reshape(-1, 1), np.array(final_cls_inds)[:num[0]].reshape(-1, 1)], axis=-1)
                 if dets is not None:
@@ -215,8 +217,8 @@ class BaseEngine(object):
                                                                     :4], dets[:, 4], dets[:, 5]
                     frame = vis_end2end(resized_img, final_boxes, final_scores, final_cls_inds,
                                     conf=conf, class_names=self.class_names)
-                vis_frame = frame[::-1,:, :].transpose([1,2,0])
-                cv2.imshow('frame', vis_frame)
+                    vis_frame = frame[::-1,:, :].transpose([1,2,0])
+                    cv2.imshow('frame', vis_frame)
                 #out.write(frame)
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
