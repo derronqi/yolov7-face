@@ -57,7 +57,7 @@ RUN usermod -a -G video $USER_NAME
 
 RUN echo $USER_NAME:$USER_NAME|chpasswd
 RUN adduser ${USER_NAME} sudo
-RUN echo '${USER_NAME} ALL=NOPASSWD: ALL' >> /etc/sudoers
+RUN echo ${USER_NAME}' ALL=NOPASSWD: ALL' >> /etc/sudoers
 
 #RUN echo '${USER_NAME} ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
@@ -87,7 +87,7 @@ RUN apt-get install x11-xserver-utils -y
 RUN apt-get install x11-apps -y
 RUN apt-get install -y libxinerama-dev libxcursor-dev
 RUN apt-get install v4l-utils -y
-
+RUN apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
 
 RUN apt-get autoremove -y
 RUN apt-get clean
@@ -105,6 +105,8 @@ RUN python3 -m pip install --no-cache-dir tqdm
 RUN pip3 install -U easydict
 RUN pip3 install -U onnxruntime
 RUN pip3 install -U onnx-simplifier==0.3.5
+RUN pip3 install -U onnx-sim
+RUN pip3 install -U opencv-python==4.5.5.64
 RUN pip3 install -U seaborn
 RUN pip3 install -U loguru
 RUN pip3 install -U numpy==1.22.1 # same setting trt
@@ -113,9 +115,6 @@ RUN pip3 install -U pyyaml
 USER ${USER_NAME}
 WORKDIR /home/${USER_NAME}
 RUN git clone https://github.com/pdh930105/yolov7-face.git
-
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES all
 
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES all

@@ -71,11 +71,6 @@ if __name__ == '__main__':
     model.model[-1].export = not (opt.grid or opt.export_nms) # set Detect() layer grid export
     for _ in range(2):
         y = model(img)  # dry runs
-    print(y[:,:,4])
-    print(y[:,:,4].max(), y[:,:,4].min())
-    print(y[:,:,5])
-    print(y[:,:,5].max(), y[:,:,5].min())
-    print((y[:,:,4]*y[:,:,5]).max())
     
     output_names = ["output"]
     if opt.export_nms:
