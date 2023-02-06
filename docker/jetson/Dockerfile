@@ -1,4 +1,4 @@
-ARG BASE_TORCH_VERSION=pth1.12
+ARG BASE_TORCH_VERSION=pth1.13
 ARG BASE_IMAGE=nvcr.io/nvidia/l4t-pytorch:r35.1.0-${BASE_TORCH_VERSION}-py3
 FROM ${BASE_IMAGE} as librealsense-builder
 
