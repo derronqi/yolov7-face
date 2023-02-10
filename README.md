@@ -50,7 +50,7 @@ python3 trt_inference/yolo_face_trt_inference.py -e yolov7-tiny-face.trt -i {ima
 ```
 ```
 # using end2end machine
-python3 trt_inference/yolo_face_trt_inference.py -e end2end.trt -i image.jpg
+python3 trt_inference/yolo_face_trt_inference.py -e end2end.trt -i image.jpg --end2end
 ```
 
 ### Run webcam inference
@@ -61,7 +61,7 @@ python3 trt_inference/yolo_face_trt_inference.py -e yolov7-tiny-face.trt -v 0
 ```
 #### using tensorrt nms
 ```
-python3 trt_inference/yolo_face_trt_inference.py -e end2end -v 0
+python3 trt_inference/yolo_face_trt_inference.py -e end2end.trt --end2end -v 0
 ```
 
 
