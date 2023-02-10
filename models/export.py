@@ -50,11 +50,13 @@ if __name__ == '__main__':
 
     # Input
     img = torch.zeros(opt.batch_size, 3, *opt.img_size).to(device)  # image size(1,3,320,192) iDetection
-    # img = cv2.imread("/user/a0132471/Files/bit-bucket/pytorch/jacinto-ai-pytest/data/results/datasets/pytorch_coco_mmdet_img_resize640_val2017_5k_yolov5/images/val2017/000000000139.png")
-    # img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
-    # img = np.ascontiguousarray(img)
-    # img = torch.tensor(img[None,:,:,:], dtype = torch.float32)
-    # img /= 255
+
+    img = cv2.imread('./image.jpg')
+    img = cv2.resize(img, dsize=(opt.img_size[0], opt.img_size[1]))
+    img = img[:, :, ::-1].transpose(2,0,1)
+    img = np.ascontiguousarray(img)
+    img = torch.tensor(img[None, :, :, :], dtype=torch.float32)
+    img = img*(1/255)
 
     # Update model
     for k, m in model.named_modules():
@@ -69,10 +71,11 @@ if __name__ == '__main__':
     model.model[-1].export = not (opt.grid or opt.export_nms) # set Detect() layer grid export
     for _ in range(2):
         y = model(img)  # dry runs
-    output_names = None
+    
+    output_names = ["output"]
     if opt.export_nms:
-        nms = models.common.NMS(conf=0.01, kpt_label=4)
-        nms_export = models.common.NMS_Export(conf=0.01, kpt_label=4)
+        nms = models.common.NMS(conf=0.01, kpt_label=5) # modified yolov7-face
+        nms_export = models.common.NMS_Export(conf=0.01, kpt_label=5) # modified yolov7-face
         y_export = nms_export(y)
         y = nms(y)
         #assert (torch.sum(torch.abs(y_export[0]-y[0]))<1e-6)
@@ -100,7 +103,10 @@ if __name__ == '__main__':
         import onnx
 
         print(f'{prefix} starting export with onnx {onnx.__version__}...')
-        f = opt.weights.replace('.pt', '.onnx')  # filename
+        if opt.export_nms:
+            f = opt.weights.replace('.pt', '_w_nms.onnx')  # filename
+        else:
+            f = opt.weights.replace('.pt', '_wo_nms.onnx')
         if opt.export_nms:
             torch.onnx.export(model_nms, img, f, verbose=False, opset_version=11, input_names=['images'], output_names=output_names,
                               dynamic_axes={'images': {0: 'batch', 2: 'height', 3: 'width'},  # size(1,3,640,640)

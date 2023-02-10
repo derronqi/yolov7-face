@@ -305,7 +305,7 @@ class IKeypoint(nn.Module):
 
                 z.append(y.view(bs, -1, self.no))
 
-        return x if self.training else (torch.cat(z, 1), x)
+        return x if self.training else torch.cat(z, 1)
 
     @staticmethod
     def _make_grid(nx=20, ny=20):
