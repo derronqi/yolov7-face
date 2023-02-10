@@ -3,7 +3,7 @@
 # base ----------------------------------------
 matplotlib>=3.2.2
 numpy==1.22.1
-opencv-python==4.5.5.64
+opencv-python==4.5.0
 Pillow
 PyYAML>=5.3.1
 scipy>=1.4.1
@@ -24,6 +24,9 @@ pandas
 onnx>=1.8.1
 onnxruntime
 onnxsim
+onnx-simplifier==0.3.5
+onnxsim
+pycuda
 # scikit-learn==0.19.2  # for coreml quantization
 
 # extras --------------------------------------
@@ -31,3 +34,5 @@ thop  # FLOPS computation
 pycocotools>=2.0  # COCO mAP
 pycuda
 easydict
+loguru
+pyyaml
