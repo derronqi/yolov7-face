@@ -1,5 +1,6 @@
 from os import path
 
+import cv2
 import lmdb
 import msgpack
 import numpy as np
@@ -39,7 +40,7 @@ class LMDB(Dataset):
         with self.env.begin(write=False) as txn:
             self.length = msgpack.loads(txn.get(b"__len__"))
             self.keys = msgpack.loads(txn.get(b"__keys__"))
-
+        
         self.transform = transform
         self.pose_label_transform = pose_label_transform
         self.augmentation_methods = augmentation_methods
@@ -129,7 +130,29 @@ class LMDB(Dataset):
 
         pose_labels = np.asarray(pose_labels)
 
+        
+        # resize image & bbox
+        h0, w0 = img.shape[:2]
+        r = self.config.img_size / max(h0, w0)  # resize image to img_size
+        if r != 1:  # always resize down, only resize up if training with augmentation
+            # if r<1:
+            #     print("resize ratio:", r)
+            interp = cv2.INTER_AREA if r < 1 else cv2.INTER_LINEAR
+            img = cv2.resize(img, (int(w0 * r), int(h0 * r)), interpolation=interp)
+            h, w = img.shape[:2]
+            shape = (self.config.img_size, self.config.img_size)
+            letterbox1 = letterbox(img, shape, auto=False, scaleup=False)
+            img, ratio, pad = letterbox1
+            shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
+            # bbox 를 normalize 할 필요가 있음 
+            labels[:, 1:] = xywhn2xyxy(labels[:, 1:], ratio[0] * w, ratio[1] * h, padw=pad[0], padh=pad[1], kpt_label=self.kpt_label)
+
+        else:
+            h, w = img.shape[:2]
+        
+        
         img = Image.fromarray(img)
+        
 
         if self.transform is not None:
             img = self.transform(img)
@@ -228,3 +251,36 @@ class LMDBDataLoaderAugmenter(DataLoader):
 
 def collate_fn(batch):
     return tuple(zip(*batch))
+
+
+def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
+    # Resize and pad image while meeting stride-multiple constraints
+    shape = img.shape[:2]  # current shape [height, width]
+    if isinstance(new_shape, int):
+        new_shape = (new_shape, new_shape)
+
+    # Scale ratio (new / old)
+    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+    if not scaleup:  # only scale down, do not scale up (for better test mAP)
+        r = min(r, 1.0)
+
+    # Compute padding
+    ratio = r, r  # width, height ratios
+    new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
+    dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
+    if auto:  # minimum rectangle
+        dw, dh = np.mod(dw, stride), np.mod(dh, stride)  # wh padding
+    elif scaleFill:  # stretch
+        dw, dh = 0.0, 0.0
+        new_unpad = (new_shape[1], new_shape[0])
+        ratio = new_shape[1] / shape[1], new_shape[0] / shape[0]  # width, height ratios
+
+    dw /= 2  # divide padding into 2 sides
+    dh /= 2
+
+    if shape[::-1] != new_unpad:  # resize
+        img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
+    top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+    left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+    return img, ratio, (dw, dh)
