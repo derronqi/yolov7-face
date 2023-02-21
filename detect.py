@@ -16,7 +16,7 @@ from utils.general import check_img_size, check_requirements, check_imshow, non_
 from utils.plots import colors, plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 
-from sixdrep import model as sixdmodel
+from models.sixdrepnet import model as sixdmodel
 
 def detect(opt):
     source, weights, view_img, save_txt, imgsz, save_txt_tidl, kpt_label = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, opt.save_txt_tidl, opt.kpt_label
@@ -98,6 +98,13 @@ def detect(opt):
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
                 # Rescale boxes from img_size to im0 size
+                if use_dof:
+                    for det_box in det[:, :4]:
+                        #img shape = (3,416,416) / det [lu_x, lu_y, rb_x, rb_y]
+                        c1 = (det_box[0], det_box[1])
+                        c2 = (det_box[2], det_box[3])
+                        
+
                 scale_coords(img.shape[2:], det[:, :4], im0.shape, kpt_label=False)
                 scale_coords(img.shape[2:], det[:, 6:], im0.shape, kpt_label=kpt_label, step=3)
 
