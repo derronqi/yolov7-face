@@ -22,7 +22,7 @@ RUN addgroup --gid $GROUP_ID $USER_NAME --force-badname
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER_NAME --force-badname
 RUN echo $USER_NAME:$USER_NAME|chpasswd
 RUN adduser ${USER_NAME} sudo
-RUN echo '${USER_NAME} ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN echo ${USER_NAME} 'ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN pip install timm
 RUN pip install yacs
 RUN pip install pyhocon
