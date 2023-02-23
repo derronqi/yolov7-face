@@ -6,11 +6,8 @@ import os
 import copy
 import cv2
 import torch
-from torch.hub import load_state_dict_from_url
-import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 from numpy import random
-import numpy as np
 
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
@@ -20,13 +17,10 @@ from utils.plots import colors, plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 
 from models.sixdrepnet import model as sixdmodel
-from easydict import EasyDict as edict
-
 
 def detect(opt):
     source, weights, view_img, save_txt, imgsz, save_txt_tidl, kpt_label = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, opt.save_txt_tidl, opt.kpt_label
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
-    save_face_img = not opt.nosave and not source.endswith('.txt') and opt.save_dof  # save inference images
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://', 'https://'))
 
@@ -42,26 +36,10 @@ def detect(opt):
 
     # Load model
     model = attempt_load(weights, map_location=device)  # load FP32 model
-    
-    if use_dof:
-        sixdofmodel = sixdmodel.SixDRepNet(backbone_name='RepVGG-B1g2',
-                                backbone_file='',
-                                deploy=True,
-                                pretrained=False,
-                                postprocess=True,
-                                gpu_id=device)
-        state_dict = load_state_dict_from_url("https://cloud.ovgu.de/s/Q67RnLDy6JKLRWm/download/6DRepNet_300W_LP_AFLW2000.pth")   
-        sixdofmodel.eval()
-        sixdofmodel.load_state_dict(state_dict)
-        mean=torch.Tensor([0.485, 0.456, 0.406]).reshape(3,1,1).to(device)
-        std=torch.Tensor([0.229, 0.224, 0.225]).reshape(3,1,1).to(device)
-        sixdofmodel.to(device)
-
-        
     stride = int(model.stride.max())  # model stride
     if isinstance(imgsz, (list,tuple)):
         if len(imgsz) == 1 or type(imgsz)==int:
-            imgsz = [imgsz[0], imgsz[0]]
+            imgsz = (imgsz[0], imgsz[0])
         assert len(imgsz) ==2; "height and width of image has to be specified"
         imgsz[0] = check_img_size(imgsz[0], s=stride)
         imgsz[1] = check_img_size(imgsz[1], s=stride)
@@ -88,7 +66,7 @@ def detect(opt):
 
     # Run inference
     if device.type != 'cpu':
-        model(torch.zeros(1, 3, imgsz[0], imgsz[1]).to(device).type_as(next(model.parameters())))  # run once
+        model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
     for path, img, im0s, vid_cap in dataset:
         img = torch.from_numpy(img).to(device)
@@ -122,53 +100,13 @@ def detect(opt):
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
                 # Rescale boxes from img_size to im0 size
-                result_dof_list = []
                 if use_dof:
-                    for det_idx, det_box in enumerate(det[:, :4]):
+                    for det_box in det[:, :4]:
                         #img shape = (3,416,416) / det [lu_x, lu_y, rb_x, rb_y]
-                        #c1 = (int(det_box[0]), int(det_box[1]))
-                        #c2 = (int(det_box[2]), int(det_box[3]))
-                        #print(f"c1, c2 = {c1}, {c2}")
-                        x_min, y_min, x_max, y_max = int(det_box[0]), int(det_box[1]), int(det_box[2]), int(det_box[3])
-                        bbox_width = abs(x_max - x_min)
-                        bbox_height = abs(y_max - y_min)
-                        x_min = max(0, x_min - int(0.2*bbox_width))
-                        y_min = max(0, y_min - int(0.2*bbox_height))
-                        x_max = x_max + int(0.2* bbox_width)
-                        y_max = y_max + int(0.2* bbox_height)
-                        face_box = torch.tensor([[x_min, y_min, x_max, y_max]], dtype=torch.float32)
-                        img_crop = img[:,:,y_min:y_max, x_min:x_max]
-                        img_resize = F.interpolate(img_crop, size=(224, 224), mode='bilinear', align_corners=False)
-                        img_resize = (img_resize - mean) / std # normalize
-                        out = sixdofmodel(img_resize) # compute rotate matrix
-                        if sixdofmodel.postprocess:
-                            # 
-                            euler = sixdmodel.sixd_utils.compute_euler_angles_from_rotation_matrices(out)* 180/np.pi
-                        else:
-                            R_pred = sixdmodel.sixd_utils.compute_rotation_matrices_from_ortho6d(out)
-                            euler = sixdmodel.sixd_utils.compute_euler_angles_from_rotation_matrices(R_pred)* 180/np.pi
+                        c1 = (det_box[0], det_box[1])
+                        c2 = (det_box[2], det_box[3])
                         
-                        p_pred_deg = euler[:, 0].cpu()
-                        y_pred_deg = euler[:, 1].cpu()
-                        r_pred_deg = euler[:, 2].cpu()
-                        
-                        scale_coords(img.shape[2:], face_box[:, :4], im0.shape, kpt_label=False)
-                        
-                        resize_center_value = (int((face_box[:, 0] + face_box[:, 2]) / 2), int((face_box[:, 1] + face_box[:, 3]) / 2))
-                        resize_bbox_width = abs(face_box[:, 2] - face_box[:, 0])
-                        result_dof_list.append([resize_center_value, resize_bbox_width, p_pred_deg, y_pred_deg, r_pred_deg])
-                        
-                        if save_face_img:
-                            np_img = img_crop.cpu().numpy()
-                            np_img = np_img.squeeze()
-                            np_img = np_img.transpose(1,2,0)
-                            np_img = np_img[:,:,::-1]
-                            np_img = np_img * 255
-                            np_img = np_img.astype(np.uint8)
-                            save_face_img_path = str(save_dir / f'face_img_{det_idx}.jpg')
-                            cv2.imwrite(save_face_img_path, np_img)
-                        
-                t3 = time_synchronized()
+
                 scale_coords(img.shape[2:], det[:, :4], im0.shape, kpt_label=False)
                 scale_coords(img.shape[2:], det[:, 6:], im0.shape, kpt_label=kpt_label, step=3)
 
@@ -192,15 +130,7 @@ def detect(opt):
                         plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=opt.line_thickness, kpt_label=kpt_label, kpts=kpts, steps=3, orig_shape=im0.shape[:2])
                         if opt.save_crop:
                             save_one_box(xyxy, im0s, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
-                        if save_face_img or view_img:
-                            result_dof =result_dof_list[det_index]
-                            center_value, bbox_width, p_pred_deg, y_pred_deg, r_pred_deg = result_dof
-                            print("degree : ", p_pred_deg, y_pred_deg, r_pred_deg)
-                            #sixdmodel.sixd_utils.plot_pose_cube(im0, y_pred_deg, p_pred_deg, r_pred_deg, tdx=center_value[0], tdy=center_value[1], size=bbox_width)
-                            print("center x,y (nose point) = ", int(kpts[6]), int(kpts[7]))
-                            #print("noise x, y = ", kpts[4], kpts[5])
-                            print("kpts : = ", kpts)
-                            sixdmodel.sixd_utils.draw_axis(im0, y_pred_deg, p_pred_deg, r_pred_deg, tdx=int(kpts[6]), tdy=int(kpts[7]), size=bbox_width)
+
 
                 if save_txt_tidl:  # Write to file in tidl dump format
                     for *xyxy, conf, cls in det_tidl:
@@ -210,8 +140,7 @@ def detect(opt):
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
             # Print time (inference + NMS)
-            print(f'{s} yolo predict Done. ({t2 - t1:.3f}s)')
-            print(f'{s} 6dof predict Done. ({t3 - t2:.3f}s)')
+            print(f'{s}Done. ({t2 - t1:.3f}s)')
 
             # Stream results
             if view_img:
@@ -244,8 +173,6 @@ def detect(opt):
     print(f'Done. ({time.time() - t0:.3f}s)')
 
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
@@ -272,8 +199,6 @@ if __name__ == '__main__':
     parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
     parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
     parser.add_argument('--kpt-label', type=int, default=5, help='number of keypoints')
-    parser.add_argument('--use-dof', default=True, help="use 6dof model (sixdrepnet)")
-    parser.add_argument('--save-dof', default=True, help="visualize 6dof results")
     opt = parser.parse_args()
     print(opt)
     #check_requirements(exclude=('tensorboard', 'pycocotools', 'thop'))

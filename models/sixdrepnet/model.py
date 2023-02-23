@@ -3,8 +3,8 @@ import math
 import torch
 from torch import nn
 
-from repvgg import get_RepVGG_func_by_name
-import sixd_utils
+from .repvgg import get_RepVGG_func_by_name
+from . import sixd_utils
 
 class SixDRepNet(nn.Module):
     def __init__(self,
