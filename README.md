@@ -18,6 +18,7 @@ This code tested docker image nvcr.io/nvidia/pytorch:22.10-py3 (RTX3090), nvcr.i
 cd ./docker/gpu
 sh compose.sh # setting to docker container
 cd yolov7-face
+pip install opencv-python # re-build opencv for environment setting and using cv2.imshow()
 ```
 
 #### jetson setting

@@ -61,8 +61,6 @@ RUN echo $USER_NAME:$USER_NAME|chpasswd
 RUN adduser ${USER_NAME} sudo
 RUN echo ${USER_NAME}' ALL=NOPASSWD: ALL' >> /etc/sudoers
 
-RUN echo '${USER_NAME} ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-
 # Copy binaries from builder stage
 #COPY --from=librealsense-builder /opt/librealsense /usr/local/
 #COPY --from=librealsense-builder /usr/lib/python3/dist-packages/pyrealsense2 /usr/lib/python3.8/dist-packages/

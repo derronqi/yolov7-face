@@ -17,12 +17,18 @@ RUN apt-get install libx264-dev -y
 RUN apt-get install sudo -y
 RUN apt-get install x11-xserver-utils -y
 RUN apt-get install x11-apps -y
+RUN apt-get install -y python3-pyqt5*
+RUN apt-get install -y libxinerama-dev libxcursor-dev
+RUN apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev -y
+RUN apt-get install qt5-default -y
 
 RUN addgroup --gid $GROUP_ID $USER_NAME --force-badname
 RUN adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USER_NAME --force-badname
 RUN echo $USER_NAME:$USER_NAME|chpasswd
 RUN adduser ${USER_NAME} sudo
 RUN echo ${USER_NAME} 'ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN apt-get install -y libgtk2.0-dev
+USER ${USER_NAME}
 RUN pip install timm
 RUN pip install yacs
 RUN pip install pyhocon
@@ -33,13 +39,13 @@ RUN pip install -U onnxruntime
 RUN pip install -U onnxsim
 RUN pip install -U seaborn
 RUN pip install -U loguru
-RUN pip install -U opencv-python==4.5.5.64
 RUN pip install -U pyrealsense2
-USER ${USER_NAME}
+#USER ${USER_NAME}
 RUN git config --global user.name "pdh"
 RUN git config --global user.email "pdh930105@gmail.com"
 WORKDIR /home/${USER_NAME}
 RUN git clone https://github.com/pdh930105/yolov7-face.git
+RUN cd yolov7-face && git checkout sixdrep
 
 ENTRYPOINT ["/opt/nvidia/nvidia_entrypoint.sh"]
 
