@@ -347,7 +347,8 @@ class LoadRealSense:  # multiple IP or RTSP cameras
         self.stride = stride
         self.sources = sources.lower()
         
-        self.imgs = [None]
+        self.imgs = None
+        self.depth_imgs = None
         
         assert self.sources=='rgb' or self.sources=='ir', f'Invalid source {self.sources}'
         
@@ -377,7 +378,7 @@ class LoadRealSense:  # multiple IP or RTSP cameras
         w, h = frames.get_width(), frames.get_height()
         self.fps = frames.get_framerate() % 100
         
-        thread = Thread(target=self.update, args=([frames, depth_frames]), daemon=True)
+        thread = Thread(target=self.update, args=([pipeline, align]), daemon=True)
         print(f' success ({w}x{h} at {self.fps:.2f} FPS).')
         thread.start()
         print('')  # newline
@@ -388,16 +389,22 @@ class LoadRealSense:  # multiple IP or RTSP cameras
         if not self.rect:
             print('WARNING: Different stream shapes detected. For optimal performance supply similarly-shaped streams.')
 
-    def update(self, frames, depth_frames):
+    def update(self, pipeline, align):
         # Read next stream frame in a daemon thread
         n = 0
-        while cap.isOpened():
+        while pipeline.get_active_profile():
             n += 1
             # _, self.imgs[index] = cap.read()
-            cap.grab()
             if n == 4:  # read every 4th frame
-                success, im = cap.retrieve()
-                self.imgs[index] = im if success else self.imgs[index] * 0
+                frames = pipeline.wait_for_frames()
+                aligned_frames = align.process(frames)
+        
+                frames = aligned_frames.get_color_frame() if self.sources == 'rgb' else aligned_frames.get_infrared_frame()
+                depth_frames = aligned_frames.get_depth_frame()
+                
+                self.imgs = frames
+                self.depth_imgs = depth_frames
+                
                 n = 0
             time.sleep(1 / self.fps)  # wait time
 
@@ -408,21 +415,24 @@ class LoadRealSense:  # multiple IP or RTSP cameras
     def __next__(self):
         self.count += 1
         img0 = self.imgs.copy()
+        depth_img0 = self.depth_imgs.copy()
         if cv2.waitKey(1) == ord('q'):  # q to quit
             cv2.destroyAllWindows()
             raise StopIteration
 
         # Letterbox
         img = [letterbox(x, self.img_size, auto=self.rect, stride=self.stride)[0] for x in img0]
-
+        depth_img = [letterbox(x, self.img_size, auto=self.rect, stride=self.stride)[0] for x in depth_img0]
         # Stack
         img = np.stack(img, 0)
+        depth_img = np.stack(depth_img, 0)
 
         # Convert
-        img = img[:, :, :, ::-1].transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
+        img = img.transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
         img = np.ascontiguousarray(img)
+        depth_img = np.ascontiguousarray(depth_img.transpose(0, 3, 1, 2))
 
-        return self.sources, img, img0, None
+        return self.sources, img, img0, depth_img, depth_img0, None
 
     def __len__(self):
         return 0  # 1E12 frames = 32 streams at 30 FPS for 30 years
