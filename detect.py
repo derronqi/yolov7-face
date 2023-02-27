@@ -27,9 +27,7 @@ def detect(opt):
     source, weights, view_img, save_txt, imgsz, save_txt_tidl, kpt_label = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size, opt.save_txt_tidl, opt.kpt_label
     save_img = not opt.nosave and not source.endswith('.txt')  # save inference images
     save_face_img = not opt.nosave and not source.endswith('.txt') and opt.save_dof  # save inference images
-    webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
-        ('rtsp://', 'rtmp://', 'http://', 'https://'))
-    
+    webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://')) or source.lower().startswith(('rgb', 'ir')) 
     use_rs = opt.use_rs
     
     use_dof = opt.use_dof
@@ -69,6 +67,7 @@ def detect(opt):
         imgsz[1] = check_img_size(imgsz[1], s=stride)
     else:
         imgsz = check_img_size(imgsz, s=stride)  # check img_size
+        imgsz = [imgsz, imgsz]
     names = model.module.names if hasattr(model, 'module') else model.names  # get class names
     if half:
         model.half()  # to FP16
@@ -90,11 +89,11 @@ def detect(opt):
             except:
                 print("does not support realsense close detect.py")
                 return 0
-            dataset = LoadRealSense(source, img_size=imgsz, stride=stride)
+            dataset = LoadRealSense(source, img_size=imgsz[0], stride=stride)
         else:
-            dataset = LoadStreams(source, img_size=imgsz, stride=stride)
+            dataset = LoadStreams(source, img_size=imgsz[0], stride=stride)
     else:
-        dataset = LoadImages(source, img_size=imgsz, stride=stride)
+        dataset = LoadImages(source, img_size=imgsz[0], stride=stride)
 
     # Run inference
     if device.type != 'cpu':
@@ -203,7 +202,7 @@ def detect(opt):
                             plot_one_box(xyxy, im0, label=label, color=colors(c, True), line_thickness=opt.line_thickness, kpt_label=kpt_label, kpts=kpts, steps=3, orig_shape=im0.shape[:2])
                             if opt.save_crop:
                                 save_one_box(xyxy, im0s, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
-                            if save_face_img or view_img:
+                            if (save_face_img or view_img) and use_dof:
                                 result_dof =result_dof_list[det_index]
                                 center_value, bbox_width, p_pred_deg, y_pred_deg, r_pred_deg = result_dof
                                 print("degree : ", p_pred_deg, y_pred_deg, r_pred_deg)
@@ -222,7 +221,8 @@ def detect(opt):
 
                 # Print time (inference + NMS)
                 print(f'{s} yolo predict Done. ({t2 - t1:.3f}s)')
-                print(f'{s} 6dof predict Done. ({t3 - t2:.3f}s)')
+                if use_dof:
+                    print(f'{s} 6dof predict Done. ({t3 - t2:.3f}s)')
 
                 # Stream results
                 if view_img:
@@ -409,6 +409,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
     parser.add_argument('--source', type=str, default='data/images', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--use-rs', action='store_true', help='use realsense')
     parser.add_argument('--img-size', nargs= '+', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
@@ -431,8 +432,8 @@ if __name__ == '__main__':
     parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
     parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
     parser.add_argument('--kpt-label', type=int, default=5, help='number of keypoints')
-    parser.add_argument('--use-dof', default=True, help="use 6dof model (sixdrepnet)")
-    parser.add_argument('--save-dof', default=True, help="visualize 6dof results")
+    parser.add_argument('--use-dof', action='store_true', help="use 6dof model (sixdrepnet)")
+    parser.add_argument('--save-dof', default='store_true', help="visualize 6dof results")
     opt = parser.parse_args()
     print(opt)
     #check_requirements(exclude=('tensorboard', 'pycocotools', 'thop'))

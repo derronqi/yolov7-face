@@ -351,13 +351,14 @@ class LoadRealSense:  # multiple IP or RTSP cameras
         self.depth_imgs = None
         
         assert self.sources=='rgb' or self.sources=='ir', f'Invalid source {self.sources}'
-        
+        fps = 30
         # Start thread to read frames from video stream
         if self.sources == 'rgb':        
             align = rs.align(rs.stream.color)
             pipeline = rs.pipeline()
             config = rs.config()
-            config.enable_stream(config, rs.stream.color, 640, 480, rs.format.rgb8, 30)
+            config.enable_stream(rs.stream.color, 640, 480, rs.format.rgb8, fps)
+            config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, fps)
             profile = pipeline.start(config)
             #intr = profile.get_stream(rs.stream.color).as_video_stream_profile().get_intrinsics()
             
@@ -365,7 +366,8 @@ class LoadRealSense:  # multiple IP or RTSP cameras
             align = rs.align(rs.stream.infrared)
             pipeline = rs.pipeline()
             config = rs.config()
-            config.enable_stream(config, rs.stream.infrared, 640, 480, rs.format.y8, 30)
+            config.enable_stream(rs.stream.infrared, 640, 480, rs.format.y8, fps)
+            config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, fps)
             profile = pipeline.start(config)
             #intr = profile.get_stream(rs.stream.infrared).as_video_stream_profile().get_intrinsics()
         
@@ -376,8 +378,10 @@ class LoadRealSense:  # multiple IP or RTSP cameras
         frames = aligned_frames.get_color_frame() if self.sources == 'rgb' else aligned_frames.get_infrared_frame()
         depth_frames = aligned_frames.get_depth_frame()
         w, h = frames.get_width(), frames.get_height()
-        self.fps = frames.get_framerate() % 100
+        self.fps = fps
         
+        self.imgs = [np.asanyarray(frames.get_data())]
+
         thread = Thread(target=self.update, args=([pipeline, align]), daemon=True)
         print(f' success ({w}x{h} at {self.fps:.2f} FPS).')
         thread.start()
@@ -402,8 +406,8 @@ class LoadRealSense:  # multiple IP or RTSP cameras
                 frames = aligned_frames.get_color_frame() if self.sources == 'rgb' else aligned_frames.get_infrared_frame()
                 depth_frames = aligned_frames.get_depth_frame()
                 
-                self.imgs = frames
-                self.depth_imgs = depth_frames
+                self.imgs = [np.asanyarray(frames.get_data())]
+                self.depth_imgs = [np.asanyarray(depth_frames.get_data())]
                 
                 n = 0
             time.sleep(1 / self.fps)  # wait time
@@ -430,7 +434,7 @@ class LoadRealSense:  # multiple IP or RTSP cameras
         # Convert
         img = img.transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
         img = np.ascontiguousarray(img)
-        depth_img = np.ascontiguousarray(depth_img.transpose(0, 3, 1, 2))
+        depth_img = np.ascontiguousarray(depth_img)
 
         return self.sources, img, img0, depth_img, depth_img0, None
 
