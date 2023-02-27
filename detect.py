@@ -13,7 +13,7 @@ from numpy import random
 import numpy as np
 
 from models.experimental import attempt_load
-from utils.datasets import LoadStreams, LoadImages
+from utils.datasets import LoadStreams, LoadImages, LoadRealSense
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path, save_one_box
 from utils.plots import colors, plot_one_box
@@ -29,7 +29,9 @@ def detect(opt):
     save_face_img = not opt.nosave and not source.endswith('.txt') and opt.save_dof  # save inference images
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://', 'https://'))
-
+    
+    use_rs = opt.use_rs
+    
     use_dof = opt.use_dof
     # Directories
     save_dir = increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok)  # increment run
@@ -82,7 +84,15 @@ def detect(opt):
     if webcam:
         view_img = check_imshow()
         cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset = LoadStreams(source, img_size=imgsz, stride=stride)
+        if use_rs:
+            try:
+                import pyrealsense2 as rs
+            except:
+                print("does not support realsense close detect.py")
+                return 0
+            dataset = LoadRealSense(source, img_size=imgsz, stride=stride)
+        else:
+            dataset = LoadStreams(source, img_size=imgsz, stride=stride)
     else:
         dataset = LoadImages(source, img_size=imgsz, stride=stride)
 

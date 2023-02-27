@@ -23,6 +23,7 @@ from tqdm import tqdm
 from utils.general import check_requirements, xyxy2xywh, xywh2xyxy, xywhn2xyxy, xyn2xy, segment2box, segments2boxes, \
     resample_segments, clean_str
 from utils.torch_utils import torch_distributed_zero_first
+import pyrealsense2 as rs
 
 # Parameters
 help_url = 'https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data'
@@ -301,6 +302,93 @@ class LoadStreams:  # multiple IP or RTSP cameras
             print('WARNING: Different stream shapes detected. For optimal performance supply similarly-shaped streams.')
 
     def update(self, index, cap):
+        # Read next stream frame in a daemon thread
+        n = 0
+        while cap.isOpened():
+            n += 1
+            # _, self.imgs[index] = cap.read()
+            cap.grab()
+            if n == 4:  # read every 4th frame
+                success, im = cap.retrieve()
+                self.imgs[index] = im if success else self.imgs[index] * 0
+                n = 0
+            time.sleep(1 / self.fps)  # wait time
+
+    def __iter__(self):
+        self.count = -1
+        return self
+
+    def __next__(self):
+        self.count += 1
+        img0 = self.imgs.copy()
+        if cv2.waitKey(1) == ord('q'):  # q to quit
+            cv2.destroyAllWindows()
+            raise StopIteration
+
+        # Letterbox
+        img = [letterbox(x, self.img_size, auto=self.rect, stride=self.stride)[0] for x in img0]
+
+        # Stack
+        img = np.stack(img, 0)
+
+        # Convert
+        img = img[:, :, :, ::-1].transpose(0, 3, 1, 2)  # BGR to RGB, to bsx3x416x416
+        img = np.ascontiguousarray(img)
+
+        return self.sources, img, img0, None
+
+    def __len__(self):
+        return 0  # 1E12 frames = 32 streams at 30 FPS for 30 years
+
+class LoadRealSense:  # multiple IP or RTSP cameras
+    def __init__(self, sources='rgb', img_size=640, stride=32, use_depth=True):
+        self.mode = 'stream'
+        self.img_size = img_size
+        self.stride = stride
+        self.sources = sources.lower()
+        
+        self.imgs = [None]
+        
+        assert self.sources=='rgb' or self.sources=='ir', f'Invalid source {self.sources}'
+        
+        # Start thread to read frames from video stream
+        if self.sources == 'rgb':        
+            align = rs.align(rs.stream.color)
+            pipeline = rs.pipeline()
+            config = rs.config()
+            config.enable_stream(config, rs.stream.color, 640, 480, rs.format.rgb8, 30)
+            profile = pipeline.start(config)
+            #intr = profile.get_stream(rs.stream.color).as_video_stream_profile().get_intrinsics()
+            
+        else: # use ir stream
+            align = rs.align(rs.stream.infrared)
+            pipeline = rs.pipeline()
+            config = rs.config()
+            config.enable_stream(config, rs.stream.infrared, 640, 480, rs.format.y8, 30)
+            profile = pipeline.start(config)
+            #intr = profile.get_stream(rs.stream.infrared).as_video_stream_profile().get_intrinsics()
+        
+        
+        frames = pipeline.wait_for_frames()
+        aligned_frames = align.process(frames)
+        
+        frames = aligned_frames.get_color_frame() if self.sources == 'rgb' else aligned_frames.get_infrared_frame()
+        depth_frames = aligned_frames.get_depth_frame()
+        w, h = frames.get_width(), frames.get_height()
+        self.fps = frames.get_framerate() % 100
+        
+        thread = Thread(target=self.update, args=([frames, depth_frames]), daemon=True)
+        print(f' success ({w}x{h} at {self.fps:.2f} FPS).')
+        thread.start()
+        print('')  # newline
+
+        # check for common shapes
+        s = np.stack([letterbox(x, self.img_size, stride=self.stride)[0].shape for x in self.imgs], 0)  # shapes
+        self.rect = np.unique(s, axis=0).shape[0] == 1  # rect inference if all shapes equal
+        if not self.rect:
+            print('WARNING: Different stream shapes detected. For optimal performance supply similarly-shaped streams.')
+
+    def update(self, frames, depth_frames):
         # Read next stream frame in a daemon thread
         n = 0
         while cap.isOpened():
