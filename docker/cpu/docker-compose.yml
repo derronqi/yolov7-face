@@ -1,0 +1,28 @@
+version: '3.3'
+services:
+        yolo_2210_cpu:
+          build:
+            context: ./
+            args:
+              USER_ID: ${USERID}
+              GROUP_ID: ${GROUPID}
+              USER_NAME: ${USERNAME}
+          image: "pdh/torch/yolo:2210"
+          container_name: ${CONTAINERNAME}  #"yolo_2210_pdh" 
+          network_mode: "host"
+          volumes:
+            #- "/home/pdh/torch:/home/${USERNAME}/torch"
+            - "/dev/:/dev/"
+            - "/tmp/.X11-unix:/tmp/.X11-unix"
+            - "/dev/snd:/dev/snd"
+            - "$HOME/.Xauthority:/$HOME/.Xauthority:rw"
+            #- "/dataset:/dataset"
+            #- "/data:/data"
+            #- "/home/${USERNAME}/.ssh/:/home/${USERNAME}/.ssh/"
+          environment:
+            - "DISPLAY"
+          device_cgroup_rules:
+            - "c 81:* rmw"
+            - "c 189:* rmw"
+          stdin_open: true
+          tty: true
