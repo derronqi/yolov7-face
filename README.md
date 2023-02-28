@@ -28,6 +28,34 @@ sh compose.sh # setting to docker container
 cd yolov7-face
 ```
 
+### demo in pytorch (+ 6dof)
+#### demo yolov7-face image
+```
+python3 detect.py --weights yolov7-tiny-face.pt --source img_path
+# if you want to 6dof result
+python3 detect.py --weights yolov7-tiny-face.pt --source img_path --use-dof # (--save-dof for save result) 
+```
+
+#### demo yolov7-face webcam (or video)
+```
+python3 detect.py --weights yolov7-tiny-face.pt --source 0 or video_path # (0 is webcam index)
+
+# if you want 6dof result
+
+python3 detect.py --weights yolov7-tiny-face.pt --source img_path --use-dof # (--save-dof for save result) 
+
+```
+
+#### demo yolov7-face realsense (only run desktop environment, because Orin does not support pyrealsense2)
+```
+python3 detect.py --weights yolov7-tiny-face.pt --source 'rgb' --use-rs # 'infrared' supported future works
+
+# if you want 6dof result
+
+python3 detect.py --weights yolov7-tiny-face.pt --source 'rgb' --use-rs --use-dof # (--save-dof for save result) 
+
+```
+
 
 #### First. convert pytorch to onnx model (without include_nms)
 ```
