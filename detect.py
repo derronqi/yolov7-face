@@ -81,7 +81,9 @@ def detect(opt):
     # Set Dataloader
     vid_path, vid_writer = None, None
     if webcam:
+        print("view_img", view_img)
         view_img = check_imshow()
+        print("view_img", view_img)
         cudnn.benchmark = True  # set True to speed up constant image size inference
         if use_rs:
             try:
@@ -227,7 +229,8 @@ def detect(opt):
                 # Stream results
                 if view_img:
                     cv2.imshow(str(p), im0)
-                    cv2.waitKey(1)  # 1 millisecond
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        return  # 1 millisecond
 
                 # Save results (image with detections)
                 if save_img:
@@ -375,8 +378,9 @@ def detect(opt):
                 # Stream results
                 if view_img:
                     cv2.imshow(str(p), im0)
-                    cv2.waitKey(1)  # 1 millisecond
-
+                    if cv2.waitKey(1) and 0xFF == ord('q'):  # 1 millisecond
+                        return
+                    
                 # Save results (image with detections)
                 if save_img:
                     if dataset.mode == 'image':

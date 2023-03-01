@@ -357,7 +357,7 @@ class LoadRealSense:  # multiple IP or RTSP cameras
             align = rs.align(rs.stream.color)
             pipeline = rs.pipeline()
             config = rs.config()
-            config.enable_stream(rs.stream.color, 640, 480, rs.format.rgb8, fps)
+            config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, fps) # opencv-aware format
             config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, fps)
             profile = pipeline.start(config)
             #intr = profile.get_stream(rs.stream.color).as_video_stream_profile().get_intrinsics()
