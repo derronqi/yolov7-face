@@ -1,5 +1,7 @@
 # yolov7-face
 
+**2023.04** [yolov8-face](https://github.com/derronqi/yolov8-face) (🔥🔥🔥↑) 
+
 ### New feature
 
 * Dynamic keypoints
