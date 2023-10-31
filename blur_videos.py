@@ -71,7 +71,10 @@ def blur_faces(frame, preprocessed_frame, predictions, kpt_label):
             for *xyxy, _, _ in reversed(det[:, :6]):
                 y_min, x_min, y_max, x_max = xyxy
                 x_min, x_max, y_min, y_max = x_min.item(), x_max.item(), y_min.item(), y_max.item()
-
+                x_min = max(x_min, 0)
+                y_min = max(y_min, 0)
+                x_max = min(x_max, frame.shape[0])
+                y_max = min(y_max, frame.shape[1])
                 frame = pixelate(frame, int(x_min), int(x_max), int(
                     y_min), int(y_max))
     return frame
