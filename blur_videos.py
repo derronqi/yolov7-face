@@ -20,8 +20,6 @@ def detect(opt):
     # Load model
     model = attempt_load(weights, map_location=device)  # load FP32 model
     stride = int(model.stride.max())  # model stride
-    names = model.module.names if hasattr(
-        model, 'module') else model.names  # get class names
     model.half()  # to FP16
 
     # Run inference
