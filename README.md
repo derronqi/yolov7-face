@@ -1,52 +1,32 @@
-# yolov7-face
 
-**2023.04** [yolov8-face](https://github.com/derronqi/yolov8-face) (🔥🔥🔥↑) 
+# Installation
 
-### New feature
+```
+git clone git@github.com:veesion-io/yolov7-face.git
+cd yolov7-face
+nvidia-docker run --gpus all --name blurring --security-opt seccomp=unconfined \
+  --net=host --ipc=host -v /dev/shm:/dev/shm --ulimit memlock=-1 \
+  -v /path/to/yolov7-face:/workspace/ -v /path/to/your/videos:/workspace/videos/ \
+  --ulimit stack=67108864 -it nvcr.io/nvidia/pytorch:23.10-py3 /bin/bash
 
-* Dynamic keypoints
-* WingLoss
-* Efficient backbones
-* EIOU and SIOU
-
-
-
-| Method           |  Test Size | Easy  | Medium | Hard  | FLOPs (B) @640 | Google | Baidu |
-| -----------------| ---------- | ----- | ------ | ----- | -------------- | ------ | ----- |
-| yolov7-lite-t    | 640        | 88.7  | 85.2   | 71.5  |  0.8           | [google](https://drive.google.com/file/d/1HNXd9EdS-BJ4dk7t1xJDFfr1JIHjd5yb/view?usp=sharing) | [gsmn](https://pan.baidu.com/s/1oxlJVveUgHUQs4UiR26aCw) |
-| yolov7-lite-s    | 640        | 92.7  | 89.9   | 78.5  |  3.0           | [google](https://drive.google.com/file/d/1MIC5vD4zqRLF_uEZHzjW_f-G3TsfaOAf/view?usp=sharing) | [3sp4](https://pan.baidu.com/s/1f_DD1gZ1AUGLFKHoPNq10Q) |
-| yolov7-tiny      | 640        | 94.7  | 92.6   | 82.1  |  13.2          | [google](https://drive.google.com/file/d/1Mona-I4PclJr5mjX1qb8dgDeMpYyBcwM/view?usp=sharing) | [aujs](https://pan.baidu.com/s/1IzHLQc2RbPyuDgEqgY8hUg) |
-| yolov7s          | 640        | 94.8  | 93.1   | 85.2  |  16.8          | [google](https://drive.google.com/file/d/1_ZjnNF_JKHVlq41EgEqMoGE2TtQ3SYmZ/view?usp=sharing) | [w72z](https://pan.baidu.com/s/1fZfZTH7qSdN-0zTk5iCcnA) |
-| yolov7           | 640        | 96.9  | 95.5   | 88.0  |  103.4         | [google](https://drive.google.com/file/d/1oIaGXFd4goyBvB1mYDK24GLof53H9ZYo/view?usp=sharing) | [jrj6](https://pan.baidu.com/s/1PiEnSaogvjkNvRLHctBz9A) |
-| yolov7+TTA       | 640        | 97.2  | 95.8   | 87.7  |  103.4         | [google](https://drive.google.com/file/d/1oIaGXFd4goyBvB1mYDK24GLof53H9ZYo/view?usp=sharing) | [jrj6](https://pan.baidu.com/s/1PiEnSaogvjkNvRLHctBz9A) |
-| yolov7-w6        | 960        | 96.4  | 95.0   | 88.3  |  89.0          | [google](https://drive.google.com/file/d/1U_kH7Xa_9-2RK2hnyvsyMLKdYB0h4MJS/view?usp=sharing) | - |
-| yolov7-w6+TTA    | 1280       | 96.9  | 95.8   | 90.4  |  89.0          | [google](https://drive.google.com/file/d/1U_kH7Xa_9-2RK2hnyvsyMLKdYB0h4MJS/view?usp=sharing) | - |
+cd /workspace/
+pip install gdown
+gdown https://drive.google.com/uc?id=1U_kH7Xa_9-2RK2hnyvsyMLKdYB0h4MJS
+pip install -r requirements.txt
+pip install seaborn onnxruntime
 
 
+pip uninstall -y opencv-contrib-python \
+  && rm -rf /usr/local/lib/python3.10/dist-packages/cv2
+pip install opencv-contrib-python ffprobe3
+apt update && DEBIAN_FRONTEND=noninteractive apt install ffmpeg -y
 
-#### Dataset
+```
 
-[WiderFace](http://shuoyang1213.me/WIDERFACE/)
+# Detect and blur faces : 
 
-[yolov7-face-label](https://drive.google.com/file/d/1FsZ0ACah386yUufi0E_PVsRW_0VtZ1bd/view?usp=sharing)
+Detect faces with a deep learning model and save blurred videos.
+```
+python3 blur_videos.py -i videos -o blurred_videos
+```
 
-#### Test
-
-![](data/images/result.jpg)
-
-
-#### Demo
-
-* [ncnn_Android_face](https://github.com/FeiGeChuanShu/ncnn_Android_face)
-
-* [yolov7-detect-face-onnxrun-cpp-py](https://github.com/hpc203/yolov7-detect-face-onnxrun-cpp-py)
-
-#### References
-
-* [https://github.com/deepcam-cn/yolov5-face](https://github.com/deepcam-cn/yolov5-face)
-
-* [https://github.com/WongKinYiu/yolov7](https://github.com/WongKinYiu/yolov7)
-
-* [https://github.com/TexasInstruments/edgeai-yolov5/tree/yolo-pose](https://github.com/TexasInstruments/edgeai-yolov5/tree/yolo-pose)
-
-* [https://github.com/ppogg/YOLOv5-Lite](https://github.com/ppogg/YOLOv5-Lite)
