@@ -10,6 +10,7 @@ from utils.general import non_max_suppression, \
 from ffprobe3 import FFProbe
 from utils.datasets import letterbox
 import numpy as np
+from tqdm import tqdm
 
 torch.backends.cudnn.enabled = True
 device = torch.device('cuda:0')
@@ -28,7 +29,7 @@ def detect(opt):
             device).type_as(next(model.parameters())))  # run once
     videos = os.listdir(opt.input_directory)
     os.makedirs(opt.output_directory, exist_ok=True)
-    for video_name in videos:
+    for video_name in tqdm(videos):
         blur_video(
             os.path.join(opt.input_directory, video_name),
             opt.output_directory, model, stride, frame_size, kpt_label)

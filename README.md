@@ -30,3 +30,16 @@ Detect faces with a deep learning model and save blurred videos.
 python3 blur_videos.py -i videos -o blurred_videos
 ```
 
+## With docker
+
+1. Build image
+
+```bash
+docker build -t yolov7-face: .
+```
+
+2. Run container
+
+```bash
+docker run --rm -it --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 --name face -v /root/videos:/workspace/videos -v /root/blurred_videos:/workspace/blurred_videos yolov7-face python3 blur_videos.py -i /workspace/videos -o /workspace/blurred_videos
+```
