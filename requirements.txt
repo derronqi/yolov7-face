@@ -29,3 +29,7 @@ onnxruntime==1.16.1
 thop  # FLOPS computation
 pycocotools>=2.0  # COCO mAP
 tqdm
+fastapi
+uvicorn
+pydantic
+boto3

@@ -43,3 +43,5 @@ docker build -t yolov7-face: .
 ```bash
 docker run --rm -it --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 --name face -v /root/videos:/workspace/videos -v /root/blurred_videos:/workspace/blurred_videos yolov7-face python3 blur_videos.py -i /workspace/videos -o /workspace/blurred_videos
 ```
+
+docker run --rm -it -d --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 --name face -v /root/videos:/workspace/videos -v /root/blurred_videos:/workspace/blurred_videos yolov7-face uvicorn api:app --host 0.0.0.0
