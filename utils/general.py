@@ -554,16 +554,6 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
             i, j = (x[:, 5:ki] > conf_thres).nonzero(as_tuple=False).T
             x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float(), kpt_label[i]), 1)
         else:  # best class only
-            # if not kpt_label:
-            #     conf, j = x[:, 5:].max(1, keepdim=True)
-            #     x = torch.cat((box, conf, j.float()), 1)[conf.view(-1) > conf_thres]
-            # else:
-                # kpts = x[:, 6:]
-                # conf, j = x[:, 5:6].max(1, keepdim=True)
-                # kpts = x[:, 5+nc:]
-                # conf, j = x[:, 5:5+nc].max(1, keepdim=True)    
-                
-                # x = torch.cat((box, conf, j.float(), kpts), 1)[conf.view(-1) > conf_thres]
             conf, j = x[:, 5:ki].max(1, keepdim=True)
             x = torch.cat((box, conf, j.float(), kpt_label), 1)[conf.view(-1) > conf_thres]
 

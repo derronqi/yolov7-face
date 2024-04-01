@@ -163,9 +163,6 @@ class ComputeLoss:
                 lbox += (1.0 - iou).mean()  # iou loss
                 if self.kpt_label:
                     #Direct kpt prediction
-                    # pkpt_x = ps[:, 6::3] * 2. - 0.5
-                    # pkpt_y = ps[:, 7::3] * 2. - 0.5
-                    # pkpt_score = ps[:, 8::3]
                     pkpt_x = ps[:, self.nc+5::3] * 2. - 0.5
                     pkpt_y = ps[:, self.nc+6::3] * 2. - 0.5
                     pkpt_score = ps[:, self.nc+7::3]
@@ -180,9 +177,6 @@ class ComputeLoss:
 
                 # Classification
                 if self.nc > 1:  # cls loss (only if multiple classes)
-                    # t = torch.full_like(ps[:, 5:], self.cn, device=device)  # targets
-                    # t[range(n), tcls[i]] = self.cp
-                    # lcls += self.BCEcls(ps[:, 5:], t)  # BCE
                     t = torch.full_like(ps[:, 5:self.nc+5], self.cn, device=device)  # targets
                     t[range(n), tcls[i]] = self.cp
                     lcls += self.BCEcls(ps[:, 5:self.nc+5], t)  # BCE
