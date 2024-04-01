@@ -513,7 +513,6 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
     if nc is None:
         nc = prediction.shape[2] - 5  if not kpt_label else prediction.shape[2] - 5 - kpt_label * 3 # number of classes
     xc = prediction[..., 4] > conf_thres  # candidates
-
     # Settings
     min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
     #max_det = 300  # maximum number of detections per image
@@ -524,6 +523,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
     merge = False  # use merge-NMS
 
     t = time.time()
+    ki = 5 + nc # kpt start index
     output = [torch.zeros((0,6), device=prediction.device)] * prediction.shape[0]
     for xi, x in enumerate(prediction):  # image index, image inference
         # Apply constraints
@@ -544,23 +544,28 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
             continue
 
         # Compute conf
-        x[:, 5:5+nc] *= x[:, 4:5]  # conf = obj_conf * cls_conf
+        x[:, 5:ki] *= x[:, 4:5]  # conf = obj_conf * cls_conf
 
         # Box (center x, center y, width, height) to (x1, y1, x2, y2)
         box = xywh2xyxy(x[:, :4])
-
+        kpt_label = x[:, ki:] # zero columns if no kpt
         # Detections matrix nx6 (xyxy, conf, cls)
         if multi_label:
-            i, j = (x[:, 5:] > conf_thres).nonzero(as_tuple=False).T
-            x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float()), 1)
+            i, j = (x[:, 5:ki] > conf_thres).nonzero(as_tuple=False).T
+            x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float(), kpt_label[i]), 1)
         else:  # best class only
-            if not kpt_label:
-                conf, j = x[:, 5:].max(1, keepdim=True)
-                x = torch.cat((box, conf, j.float()), 1)[conf.view(-1) > conf_thres]
-            else:
-                kpts = x[:, 6:]
-                conf, j = x[:, 5:6].max(1, keepdim=True)
-                x = torch.cat((box, conf, j.float(), kpts), 1)[conf.view(-1) > conf_thres]
+            # if not kpt_label:
+            #     conf, j = x[:, 5:].max(1, keepdim=True)
+            #     x = torch.cat((box, conf, j.float()), 1)[conf.view(-1) > conf_thres]
+            # else:
+                # kpts = x[:, 6:]
+                # conf, j = x[:, 5:6].max(1, keepdim=True)
+                # kpts = x[:, 5+nc:]
+                # conf, j = x[:, 5:5+nc].max(1, keepdim=True)    
+                
+                # x = torch.cat((box, conf, j.float(), kpts), 1)[conf.view(-1) > conf_thres]
+            conf, j = x[:, 5:ki].max(1, keepdim=True)
+            x = torch.cat((box, conf, j.float(), kpt_label), 1)[conf.view(-1) > conf_thres]
 
 
         # Filter by class
