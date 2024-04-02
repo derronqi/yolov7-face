@@ -34,6 +34,10 @@
 
 ![](data/images/result.jpg)
 
+#### QQ Group
+
+![QQ Group](data/qrcode_1712047038063.jpg)
+
 
 #### Demo
 
