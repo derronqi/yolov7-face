@@ -166,7 +166,7 @@ def test(data,
                 if nl:
                     stats.append((torch.zeros(0, niou, dtype=torch.bool), torch.Tensor(), torch.Tensor(), tcls))
                 continue
-
+            
             # Predictions
             if single_cls:
                 pred[:, 5] = 0

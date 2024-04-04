@@ -163,9 +163,9 @@ class ComputeLoss:
                 lbox += (1.0 - iou).mean()  # iou loss
                 if self.kpt_label:
                     #Direct kpt prediction
-                    pkpt_x = ps[:, 6::3] * 2. - 0.5
-                    pkpt_y = ps[:, 7::3] * 2. - 0.5
-                    pkpt_score = ps[:, 8::3]
+                    pkpt_x = ps[:, self.nc+5::3] * 2. - 0.5
+                    pkpt_y = ps[:, self.nc+6::3] * 2. - 0.5
+                    pkpt_score = ps[:, self.nc+7::3]
                     #mask
                     kpt_mask = (tkpt[i][:, 0::2] != 0)
                     lkptv += self.BCEcls(pkpt_score, kpt_mask.float()) 
@@ -177,10 +177,9 @@ class ComputeLoss:
 
                 # Classification
                 if self.nc > 1:  # cls loss (only if multiple classes)
-                    t = torch.full_like(ps[:, 5:], self.cn, device=device)  # targets
+                    t = torch.full_like(ps[:, 5:self.nc+5], self.cn, device=device)  # targets
                     t[range(n), tcls[i]] = self.cp
-                    lcls += self.BCEcls(ps[:, 5:], t)  # BCE
-
+                    lcls += self.BCEcls(ps[:, 5:self.nc+5], t)  # BCE
                 # Append targets to text file
                 # with open('targets.txt', 'a') as file:
                 #     [file.write('%11.5g ' * 4 % tuple(x) + '\n') for x in torch.cat((txy[i], twh[i]), 1)]
