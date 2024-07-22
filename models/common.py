@@ -94,7 +94,7 @@ class Conv(nn.Module):
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
         self.bn = nn.BatchNorm2d(c2)
         if act != "ReLU":
-            self.act = nn.SiLU() if act is True else (act if isinstance(act, nn.Module) else nn.Identity())
+            self.act = nn.LeakyReLU(0.1, inplace=True) if act is True else (act if isinstance(act, nn.Module) else nn.Identity())
         else:
             self.act = nn.ReLU(inplace=True)
 
@@ -173,7 +173,7 @@ class BottleneckCSP(nn.Module):
         self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         self.cv4 = Conv(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
-        self.act = nn.SiLU()
+        self.act = nn.LeakyReLU(0.1, inplace=True)
         self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)])
 
     def forward(self, x):
@@ -192,7 +192,7 @@ class BottleneckCSPF(nn.Module):
         #self.cv3 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         self.cv4 = Conv(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_)  # applied to cat(cv2, cv3)
-        self.act = nn.SiLU()
+        self.act = nn.LeakyReLU(0.1, inplace=True)
         self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)])
 
     def forward(self, x):
@@ -210,7 +210,7 @@ class BottleneckCSP2(nn.Module):
         self.cv2 = nn.Conv2d(c_, c_, 1, 1, bias=False)
         self.cv3 = Conv(2 * c_, c2, 1, 1)
         self.bn = nn.BatchNorm2d(2 * c_) 
-        self.act = nn.SiLU()
+        self.act = nn.LeakyReLU(0.1, inplace=True)
         self.m = nn.Sequential(*[Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)])
 
     def forward(self, x):
@@ -281,7 +281,7 @@ class SPPCSP(nn.Module):
         self.cv5 = Conv(4 * c_, c_, 1, 1)
         self.cv6 = Conv(c_, c_, 3, 1)
         self.bn = nn.BatchNorm2d(2 * c_) 
-        self.act = nn.SiLU()
+        self.act = nn.LeakyReLU(0.1, inplace=True)
         self.cv7 = Conv(2 * c_, c2, 1, 1)
 
     def forward(self, x):
@@ -442,7 +442,7 @@ class conv_bn_relu_maxpool(nn.Module):
         self.conv = nn.Sequential(
             nn.Conv2d(c1, c2, kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(c2),
-            nn.SiLU(inplace=True),
+            nn.LeakyReLU(0.1, inplace=True),
         )
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
 
@@ -456,10 +456,10 @@ class DWConvblock(nn.Module):
         self.p = k // 2
         self.conv1 = nn.Conv2d(in_channels, in_channels, kernel_size=k, stride=s, padding=self.p, groups=in_channels, bias=False)
         self.bn1 = nn.BatchNorm2d(in_channels)
-        self.act1 = nn.SiLU(inplace=True)
+        self.act1 = nn.LeakyReLU(0.1, inplace=True)
         self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels)
-        self.act2 = nn.SiLU(inplace=True)
+        self.act2 = nn.LeakyReLU(0.1, inplace=True)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -508,19 +508,19 @@ class Shuffle_Block(nn.Module):
                 nn.BatchNorm2d(inp),
                 nn.Conv2d(inp, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
                 nn.BatchNorm2d(branch_features),
-                nn.SiLU(inplace=True),
+                nn.LeakyReLU(0.1, inplace=True),
             )
 
         self.branch2 = nn.Sequential(
             nn.Conv2d(inp if (self.stride > 1) else branch_features,
                       branch_features, kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(branch_features),
-            nn.SiLU(inplace=True),
+            nn.LeakyReLU(0.1, inplace=True),
             self.depthwise_conv(branch_features, branch_features, kernel_size=3, stride=self.stride, padding=1),
             nn.BatchNorm2d(branch_features),
             nn.Conv2d(branch_features, branch_features, kernel_size=1, stride=1, padding=0, bias=False),
             nn.BatchNorm2d(branch_features),
-            nn.SiLU(inplace=True),
+            nn.LeakyReLU(0.1, inplace=True),
         )
 
     @staticmethod

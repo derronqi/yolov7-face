@@ -116,7 +116,7 @@ def test(data,
             cv2.imwrite( dst_file, img[0].numpy().transpose(1,2,0)[:,:,::-1])
         #print(img.shape)
         img = img.half() if half else img.float()  # uint8 to fp16/32
-        img /= 255.0  # 0 - 255 to 0.0 - 1.0
+        img /= 256.0-0.5  # 0 - 255 to 0.0 - 1.0
         targets = targets.to(device)
         nb, _, height, width = img.shape  # batch size, channels, height, width
         with torch.no_grad():
